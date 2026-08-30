@@ -29,6 +29,7 @@ Current status:
 - Day 8: frontend setup and auth UI pushed to GitHub
 - Day 9: dashboard and file listing UI pushed to GitHub
 - Day 10: file upload and preview UI pushed to GitHub
+- Day 11: sharing UI and permissions pushed to GitHub
 
 ## Project Layout
 
@@ -147,6 +148,19 @@ docs/
 - Signed upload frontend flow
 - Dashboard list refresh after upload
 - Backend CORS configuration for local frontend auth cookies
+
+## Day 11 Deliverables
+
+- Share modal for files and folders
+- Email sharing UI
+- Viewer/Editor permission selector
+- Public link generation UI
+- Optional public-link expiry and password fields
+- Copy public-link action
+- Shared-user listing
+- Remove-share action
+- Backend share listing filters for one file or folder
+- Backend share responses include shared user email
 
 ## Backend Local Setup
 

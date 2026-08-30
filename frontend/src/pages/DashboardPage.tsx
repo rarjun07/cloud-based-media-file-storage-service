@@ -18,6 +18,8 @@ import { getApiErrorMessage } from "../services/api";
 import { useCurrentUser, useLogout } from "../hooks/useAuth";
 import { buildBreadcrumbs, useDriveItems, useFolderDetail } from "../hooks/useDrive";
 import type { FileItem, Folder as FolderItem } from "../services/drive";
+import { ShareModal } from "../components/ShareModal";
+import type { ShareTarget } from "../services/sharing";
 import { UploadPanel } from "../components/UploadPanel";
 
 type ViewMode = "list" | "grid";
@@ -27,6 +29,7 @@ export function DashboardPage() {
   const [activeSection, setActiveSection] = useState<SectionKey>("my-drive");
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("list");
+  const [shareTarget, setShareTarget] = useState<ShareTarget | null>(null);
   const { data: user } = useCurrentUser();
   const logout = useLogout();
   const folderDetail = useFolderDetail(currentFolderId);
@@ -142,6 +145,7 @@ export function DashboardPage() {
                 itemCount={itemCount}
                 viewMode={viewMode}
                 onOpenFolder={setCurrentFolderId}
+                onShare={setShareTarget}
               />
             </>
           ) : (
@@ -149,6 +153,7 @@ export function DashboardPage() {
           )}
         </section>
       </div>
+      {shareTarget ? <ShareModal target={shareTarget} onClose={() => setShareTarget(null)} /> : null}
     </main>
   );
 }
@@ -211,6 +216,7 @@ function DriveContent({
   itemCount,
   viewMode,
   onOpenFolder,
+  onShare,
 }: {
   folders: FolderItem[];
   files: FileItem[];
@@ -219,6 +225,7 @@ function DriveContent({
   itemCount: number;
   viewMode: ViewMode;
   onOpenFolder: (folderId: string) => void;
+  onShare: (target: ShareTarget) => void;
 }) {
   if (isLoading) {
     return (
@@ -251,9 +258,9 @@ function DriveContent({
   }
 
   return viewMode === "grid" ? (
-    <GridView folders={folders} files={files} onOpenFolder={onOpenFolder} />
+    <GridView folders={folders} files={files} onOpenFolder={onOpenFolder} onShare={onShare} />
   ) : (
-    <ListView folders={folders} files={files} onOpenFolder={onOpenFolder} />
+    <ListView folders={folders} files={files} onOpenFolder={onOpenFolder} onShare={onShare} />
   );
 }
 
@@ -261,35 +268,43 @@ function ListView({
   folders,
   files,
   onOpenFolder,
+  onShare,
 }: {
   folders: FolderItem[];
   files: FileItem[];
   onOpenFolder: (folderId: string) => void;
+  onShare: (target: ShareTarget) => void;
 }) {
   return (
     <div className="mt-5 overflow-hidden rounded-lg border border-line bg-white shadow-sm">
-      <div className="grid grid-cols-[1fr_140px_160px] border-b border-line bg-panel px-4 py-3 text-xs font-semibold uppercase text-slate-500">
+      <div className="grid grid-cols-[1fr_120px_150px_52px] border-b border-line bg-panel px-4 py-3 text-xs font-semibold uppercase text-slate-500">
         <span>Name</span>
         <span>Type</span>
         <span>Updated</span>
+        <span />
       </div>
       {folders.map((folder) => (
-        <button
-          className="grid h-14 w-full grid-cols-[1fr_140px_160px] items-center border-b border-line px-4 text-left transition hover:bg-blue-50"
+        <div
+          className="grid h-14 grid-cols-[1fr_120px_150px_52px] items-center border-b border-line px-4 transition hover:bg-blue-50"
           key={folder.id}
-          type="button"
-          onClick={() => onOpenFolder(folder.id)}
         >
-          <ItemName icon={<Folder size={19} />} name={folder.name} />
+          <button className="min-w-0 text-left" type="button" onClick={() => onOpenFolder(folder.id)}>
+            <ItemName icon={<Folder size={19} />} name={folder.name} />
+          </button>
           <span className="text-sm text-slate-500">Folder</span>
           <span className="text-sm text-slate-500">{formatDate(folder.updated_at)}</span>
-        </button>
+          <ShareAction
+            onClick={() => onShare({ id: folder.id, type: "folder", name: folder.name })}
+            label={`Share ${folder.name}`}
+          />
+        </div>
       ))}
       {files.map((file) => (
-        <div className="grid h-14 grid-cols-[1fr_140px_160px] items-center border-b border-line px-4" key={file.id}>
+        <div className="grid h-14 grid-cols-[1fr_120px_150px_52px] items-center border-b border-line px-4" key={file.id}>
           <ItemName icon={<FileText size={19} />} name={file.name} />
           <span className="truncate text-sm text-slate-500">{file.mime_type}</span>
           <span className="text-sm text-slate-500">{formatBytes(file.size_bytes)}</span>
+          <ShareAction onClick={() => onShare({ id: file.id, type: "file", name: file.name })} label={`Share ${file.name}`} />
         </div>
       ))}
     </div>
@@ -300,10 +315,12 @@ function GridView({
   folders,
   files,
   onOpenFolder,
+  onShare,
 }: {
   folders: FolderItem[];
   files: FileItem[];
   onOpenFolder: (folderId: string) => void;
+  onShare: (target: ShareTarget) => void;
 }) {
   const items = useMemo(
     () => [
@@ -317,18 +334,30 @@ function GridView({
     <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {items.map((item) =>
         item.kind === "folder" ? (
-          <button
+          <div
             className="min-h-28 rounded-lg border border-line bg-white p-4 text-left shadow-sm transition hover:border-blue-200 hover:bg-blue-50"
             key={item.id}
-            type="button"
-            onClick={() => onOpenFolder(item.id)}
           >
-            <ItemName icon={<Folder size={21} />} name={item.name} />
+            <div className="flex items-start justify-between gap-3">
+              <button className="min-w-0 text-left" type="button" onClick={() => onOpenFolder(item.id)}>
+                <ItemName icon={<Folder size={21} />} name={item.name} />
+              </button>
+              <ShareAction
+                onClick={() => onShare({ id: item.id, type: "folder", name: item.name })}
+                label={`Share ${item.name}`}
+              />
+            </div>
             <p className="mt-3 text-sm text-slate-500">Folder</p>
-          </button>
+          </div>
         ) : (
           <div className="min-h-28 rounded-lg border border-line bg-white p-4 shadow-sm" key={item.id}>
-            <ItemName icon={<FileText size={21} />} name={item.name} />
+            <div className="flex items-start justify-between gap-3">
+              <ItemName icon={<FileText size={21} />} name={item.name} />
+              <ShareAction
+                onClick={() => onShare({ id: item.id, type: "file", name: item.name })}
+                label={`Share ${item.name}`}
+              />
+            </div>
             <p className="mt-3 truncate text-sm text-slate-500">{item.mime_type}</p>
             <p className="mt-1 text-sm text-slate-500">{formatBytes(item.size_bytes)}</p>
           </div>
@@ -369,6 +398,20 @@ function IconToggle({
       onClick={onClick}
     >
       {icon}
+    </button>
+  );
+}
+
+function ShareAction({ onClick, label }: { onClick: () => void; label: string }) {
+  return (
+    <button
+      className="flex h-8 w-8 items-center justify-center rounded-md text-slate-500 transition hover:bg-white hover:text-brand"
+      type="button"
+      aria-label={label}
+      title={label}
+      onClick={onClick}
+    >
+      <Share2 size={16} aria-hidden="true" />
     </button>
   );
 }

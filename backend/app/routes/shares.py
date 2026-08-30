@@ -3,7 +3,7 @@ import secrets
 import uuid
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, Body, Depends, HTTPException, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -29,7 +29,7 @@ async def create_share(
     payload: ShareCreate,
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
-) -> Share:
+) -> ShareRead:
     await _require_owned_target(session, current_user.id, payload.file_id, payload.folder_id)
 
     shared_user = await _get_user_by_email(session, payload.shared_with_email)
@@ -44,7 +44,7 @@ async def create_share(
         existing_share.updated_at = datetime.now(UTC)
         await session.commit()
         await session.refresh(existing_share)
-        return existing_share
+        return _serialize_share(existing_share, shared_user)
 
     share = Share(
         owner_id=current_user.id,
@@ -56,18 +56,30 @@ async def create_share(
     session.add(share)
     await session.commit()
     await session.refresh(share)
-    return share
+    return _serialize_share(share, shared_user)
 
 
 @router.get("/shares", response_model=list[ShareRead])
 async def list_shares(
+    file_id: uuid.UUID | None = Query(default=None),
+    folder_id: uuid.UUID | None = Query(default=None),
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
-) -> list[Share]:
-    result = await session.execute(
-        select(Share).where(Share.owner_id == current_user.id).order_by(Share.created_at.desc())
-    )
-    return list(result.scalars().all())
+) -> list[ShareRead]:
+    if bool(file_id) and bool(folder_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Filter by file or folder, not both")
+
+    conditions = [Share.owner_id == current_user.id]
+    if file_id:
+        conditions.append(Share.file_id == file_id)
+    if folder_id:
+        conditions.append(Share.folder_id == folder_id)
+
+    result = await session.execute(select(Share).where(*conditions).order_by(Share.created_at.desc()))
+    shares = list(result.scalars().all())
+    shared_user_ids = [share.shared_with_user_id for share in shares]
+    users_by_id = await _get_users_by_id(session, shared_user_ids)
+    return [_serialize_share(share, users_by_id.get(share.shared_with_user_id)) for share in shares]
 
 
 @router.delete("/shares/{share_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -164,6 +176,13 @@ async def _get_user_by_email(session: AsyncSession, email: str) -> User | None:
     return result.scalar_one_or_none()
 
 
+async def _get_users_by_id(session: AsyncSession, user_ids: list[uuid.UUID]) -> dict[uuid.UUID, User]:
+    if not user_ids:
+        return {}
+    result = await session.execute(select(User).where(User.id.in_(user_ids)))
+    return {user.id: user for user in result.scalars().all()}
+
+
 async def _get_existing_share(
     session: AsyncSession,
     shared_with_user_id: uuid.UUID,
@@ -182,3 +201,17 @@ async def _get_existing_share(
 
 def _hash_token(token: str) -> str:
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def _serialize_share(share: Share, shared_user: User | None) -> ShareRead:
+    return ShareRead(
+        id=share.id,
+        owner_id=share.owner_id,
+        shared_with_user_id=share.shared_with_user_id,
+        shared_with_email=shared_user.email if shared_user else None,
+        file_id=share.file_id,
+        folder_id=share.folder_id,
+        role=ShareRole(share.role),
+        created_at=share.created_at,
+        updated_at=share.updated_at,
+    )

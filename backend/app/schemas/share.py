@@ -25,6 +25,7 @@ class ShareRead(BaseModel):
     id: UUID
     owner_id: UUID
     shared_with_user_id: UUID
+    shared_with_email: EmailStr | None = None
     file_id: UUID | None
     folder_id: UUID | None
     role: ShareRole

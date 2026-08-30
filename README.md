@@ -25,7 +25,8 @@ Current status:
 - Day 4: folder system and file management pushed to GitHub
 - Day 5: sharing and permissions pushed to GitHub
 - Day 6: search, trash, and optimization pushed to GitHub
-- Day 7: backend testing and deployment readiness completed locally
+- Day 7: backend testing and deployment readiness pushed to GitHub
+- Day 8: frontend setup and auth UI pushed to GitHub
 
 ## Project Layout
 
@@ -112,6 +113,18 @@ docs/
 - Deployment documentation
 - Tests for deployment config and API testing artifacts
 
+## Day 8 Deliverables
+
+- React frontend initialized with Vite
+- TypeScript setup
+- Tailwind CSS setup
+- Axios API client
+- TanStack Query setup
+- Login and signup UI
+- Current-user session check
+- Logout action
+- Cookie-based auth integration with backend
+
 ## Backend Local Setup
 
 ```bash
@@ -140,4 +153,18 @@ Deployment preflight:
 ```bash
 cd backend
 ../.venv/bin/python scripts/preflight.py
+```
+
+## Frontend Local Setup
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Frontend URL:
+
+```text
+http://127.0.0.1:5173
 ```

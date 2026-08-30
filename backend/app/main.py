@@ -1,10 +1,22 @@
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 
 from app.core.config import settings
+from app.core.database import create_database_tables
+from app.routes.auth import router as auth_router
 from app.routes.health import router as health_router
 
 
-app = FastAPI(title=settings.app_name)
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    if settings.create_tables_on_startup:
+        await create_database_tables()
+    yield
 
+
+app = FastAPI(title=settings.app_name, lifespan=lifespan)
+
+app.include_router(auth_router, prefix=settings.api_v1_prefix)
 app.include_router(health_router, prefix=settings.api_v1_prefix)
-

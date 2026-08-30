@@ -7,11 +7,16 @@ class Settings(BaseSettings):
     api_v1_prefix: str = "/api/v1"
 
     database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/cloud_storage"
+    create_tables_on_startup: bool = False
 
     jwt_secret_key: str = "change-me"
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = 15
     jwt_refresh_token_expire_days: int = 7
+
+    access_token_cookie_name: str = "access_token"
+    refresh_token_cookie_name: str = "refresh_token"
+    secure_cookies: bool = False
 
     supabase_url: str = ""
     supabase_service_role_key: str = ""
@@ -21,4 +26,3 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-

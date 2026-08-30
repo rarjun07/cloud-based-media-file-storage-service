@@ -1,2 +1,3 @@
-"""SQLAlchemy models will be added during backend implementation days."""
+from app.models.user import User
 
+__all__ = ["User"]

@@ -32,6 +32,8 @@ export type FileItem = {
   checksum: string | null;
   upload_status: string;
   is_deleted: boolean;
+  created_at: string;
+  updated_at: string;
 };
 
 export type DriveItems = {

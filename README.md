@@ -30,6 +30,7 @@ Current status:
 - Day 9: dashboard and file listing UI pushed to GitHub
 - Day 10: file upload and preview UI pushed to GitHub
 - Day 11: sharing UI and permissions pushed to GitHub
+- Day 12: search, sorting, and lazy loading pushed to GitHub
 
 ## Project Layout
 
@@ -161,6 +162,17 @@ docs/
 - Remove-share action
 - Backend share listing filters for one file or folder
 - Backend share responses include shared user email
+
+## Day 12 Deliverables
+
+- Frontend search bar connected to backend search API
+- File type filter
+- Sorting by updated date, name, and size
+- Sort direction toggle
+- Combined file/folder result rendering
+- Show-more pagination for loaded results
+- Search result empty and loading states
+- Backend file response timestamps for frontend sorting
 
 ## Backend Local Setup
 

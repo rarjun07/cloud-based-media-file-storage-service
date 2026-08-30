@@ -39,6 +39,23 @@ export type DriveItems = {
   files: FileItem[];
 };
 
+export type InitUploadPayload = {
+  name: string;
+  mime_type: string;
+  size_bytes: number;
+  folder_id: string | null;
+};
+
+export type InitUploadResponse = {
+  file_id: string;
+  storage_provider: string;
+  storage_bucket: string;
+  storage_key: string;
+  upload_url: string;
+  upload_token: string;
+  expires_in_seconds: number;
+};
+
 export async function listFolders(parentId: string | null): Promise<Folder[]> {
   const response = await api.get<Folder[]>("/folders", {
     params: parentId ? { parent_id: parentId } : undefined,
@@ -61,4 +78,34 @@ export async function listFiles(folderId: string | null): Promise<FileItem[]> {
 export async function listDriveItems(folderId: string | null): Promise<DriveItems> {
   const [folders, files] = await Promise.all([listFolders(folderId), listFiles(folderId)]);
   return { folders, files };
+}
+
+export async function initUpload(payload: InitUploadPayload): Promise<InitUploadResponse> {
+  const response = await api.post<InitUploadResponse>("/files/init-upload", payload);
+  return response.data;
+}
+
+export async function uploadToSignedUrl(
+  uploadUrl: string,
+  file: globalThis.File,
+  onProgress: (progress: number) => void,
+): Promise<void> {
+  await api.put(uploadUrl, file, {
+    baseURL: "",
+    withCredentials: false,
+    headers: {
+      "Content-Type": file.type || "application/octet-stream",
+    },
+    onUploadProgress: (event) => {
+      if (!event.total) {
+        return;
+      }
+      onProgress(Math.round((event.loaded / event.total) * 100));
+    },
+  });
+}
+
+export async function completeUpload(fileId: string): Promise<FileItem> {
+  const response = await api.post<FileItem>("/files/complete-upload", { file_id: fileId });
+  return response.data;
 }

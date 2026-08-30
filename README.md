@@ -28,6 +28,7 @@ Current status:
 - Day 7: backend testing and deployment readiness pushed to GitHub
 - Day 8: frontend setup and auth UI pushed to GitHub
 - Day 9: dashboard and file listing UI pushed to GitHub
+- Day 10: file upload and preview UI pushed to GitHub
 
 ## Project Layout
 
@@ -136,6 +137,16 @@ docs/
 - Frontend file/folder services
 - React Query hooks for drive data
 - Backend `GET /api/v1/files` listing endpoint for folder contents
+
+## Day 10 Deliverables
+
+- React Dropzone drag-and-drop upload UI
+- Upload progress indicator
+- Image preview
+- PDF preview
+- Signed upload frontend flow
+- Dashboard list refresh after upload
+- Backend CORS configuration for local frontend auth cookies
 
 ## Backend Local Setup
 

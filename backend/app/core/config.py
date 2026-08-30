@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     app_name: str = "Cloud Based Media File Storage Service"
     app_env: str = "development"
     api_v1_prefix: str = "/api/v1"
+    cors_origins: str = "http://127.0.0.1:5173,http://localhost:5173"
 
     database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/cloud_storage"
     create_tables_on_startup: bool = False
@@ -41,6 +42,10 @@ class Settings(BaseSettings):
             for mime_type in self.allowed_upload_mime_types.split(",")
             if mime_type.strip()
         }
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
 
 
 settings = Settings()

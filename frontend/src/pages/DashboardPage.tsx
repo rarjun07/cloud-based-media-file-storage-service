@@ -18,6 +18,7 @@ import { getApiErrorMessage } from "../services/api";
 import { useCurrentUser, useLogout } from "../hooks/useAuth";
 import { buildBreadcrumbs, useDriveItems, useFolderDetail } from "../hooks/useDrive";
 import type { FileItem, Folder as FolderItem } from "../services/drive";
+import { UploadPanel } from "../components/UploadPanel";
 
 type ViewMode = "list" | "grid";
 type SectionKey = "my-drive" | "shared" | "trash";
@@ -131,15 +132,18 @@ export function DashboardPage() {
           </header>
 
           {activeSection === "my-drive" ? (
-            <DriveContent
-              folders={driveItems.data?.folders ?? []}
-              files={driveItems.data?.files ?? []}
-              isLoading={driveItems.isLoading || folderDetail.isLoading}
-              error={driveItems.error ?? folderDetail.error}
-              itemCount={itemCount}
-              viewMode={viewMode}
-              onOpenFolder={setCurrentFolderId}
-            />
+            <>
+              <UploadPanel folderId={currentFolderId} />
+              <DriveContent
+                folders={driveItems.data?.folders ?? []}
+                files={driveItems.data?.files ?? []}
+                isLoading={driveItems.isLoading || folderDetail.isLoading}
+                error={driveItems.error ?? folderDetail.error}
+                itemCount={itemCount}
+                viewMode={viewMode}
+                onOpenFolder={setCurrentFolderId}
+              />
+            </>
           ) : (
             <SectionPlaceholder section={activeSection} />
           )}

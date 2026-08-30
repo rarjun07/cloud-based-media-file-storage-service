@@ -29,6 +29,7 @@ import { ShareModal } from "../components/ShareModal";
 import type { ShareTarget } from "../services/sharing";
 import type { TrashTarget } from "../services/trash";
 import { UploadPanel } from "../components/UploadPanel";
+import { EmptyState, ErrorState, LoadingState } from "../components/StatusState";
 
 type ViewMode = "list" | "grid";
 type SectionKey = "my-drive" | "shared" | "trash";
@@ -108,9 +109,9 @@ export function DashboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#eef2f7] text-ink">
+    <main className="min-h-dvh bg-[#eef2f7] text-ink">
       <div className="grid min-h-screen grid-cols-1 lg:grid-cols-[260px_1fr]">
-        <aside className="border-b border-line bg-white px-4 py-4 lg:border-b-0 lg:border-r">
+        <aside className="border-b border-line bg-white px-3 py-4 sm:px-4 lg:border-b-0 lg:border-r">
           <div className="flex items-center gap-3 px-2">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand text-white">
               <HardDrive size={21} aria-hidden="true" />
@@ -121,7 +122,7 @@ export function DashboardPage() {
             </div>
           </div>
 
-          <nav className="mt-6 space-y-1">
+          <nav className="mt-6 grid grid-cols-3 gap-2 lg:block lg:space-y-1">
             <SidebarItem
               icon={<HardDrive size={18} />}
               label="My Drive"
@@ -358,35 +359,15 @@ function DriveContent({
   onShowMore: () => void;
 }) {
   if (isLoading) {
-    return (
-      <div className="flex min-h-[360px] items-center justify-center">
-        <div className="flex items-center gap-3 rounded-lg border border-line bg-white px-5 py-4 shadow-sm">
-          <Loader2 className="animate-spin text-brand" size={20} aria-hidden="true" />
-          <span className="text-sm font-medium">{isSearchMode ? "Searching" : "Loading drive"}</span>
-        </div>
-      </div>
-    );
+    return <LoadingState label={isSearchMode ? "Searching" : "Loading drive"} />;
   }
 
   if (error) {
-    return (
-      <div className="mt-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-        {getApiErrorMessage(error)}
-      </div>
-    );
+    return <ErrorState message={getApiErrorMessage(error)} />;
   }
 
   if (totalCount === 0) {
-    return (
-      <div className="mt-5 flex min-h-[360px] items-center justify-center rounded-lg border border-dashed border-line bg-white">
-        <div className="text-center">
-          <Folder className="mx-auto text-slate-300" size={38} aria-hidden="true" />
-          <h2 className="mt-3 text-lg font-semibold text-slate-700">
-            {isSearchMode ? "No matching items" : "No files or folders"}
-          </h2>
-        </div>
-      </div>
-    );
+    return <EmptyState icon={<Folder size={38} aria-hidden="true" />} title={isSearchMode ? "No matching items" : "No files or folders"} />;
   }
 
   return (
@@ -565,33 +546,15 @@ function TrashContent({
   onPermanentDelete: (target: TrashTarget, name: string) => void;
 }) {
   if (isLoading) {
-    return (
-      <div className="flex min-h-[360px] items-center justify-center">
-        <div className="flex items-center gap-3 rounded-lg border border-line bg-white px-5 py-4 shadow-sm">
-          <Loader2 className="animate-spin text-brand" size={20} aria-hidden="true" />
-          <span className="text-sm font-medium">Loading trash</span>
-        </div>
-      </div>
-    );
+    return <LoadingState label="Loading trash" />;
   }
 
   if (error) {
-    return (
-      <div className="mt-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-        {getApiErrorMessage(error)}
-      </div>
-    );
+    return <ErrorState message={getApiErrorMessage(error)} />;
   }
 
   if (items.length === 0) {
-    return (
-      <div className="mt-5 flex min-h-[360px] items-center justify-center rounded-lg border border-dashed border-line bg-white">
-        <div className="text-center">
-          <Trash2 className="mx-auto text-slate-300" size={38} aria-hidden="true" />
-          <h2 className="mt-3 text-lg font-semibold text-slate-700">Trash is empty</h2>
-        </div>
-      </div>
-    );
+    return <EmptyState icon={<Trash2 size={38} aria-hidden="true" />} title="Trash is empty" />;
   }
 
   return (
@@ -748,14 +711,7 @@ function TrashActions({
 }
 
 function SectionPlaceholder() {
-  return (
-    <div className="mt-5 flex min-h-[360px] items-center justify-center rounded-lg border border-dashed border-line bg-white">
-      <div className="text-center">
-        <Share2 className="mx-auto text-slate-300" size={38} aria-hidden="true" />
-        <h2 className="mt-3 text-lg font-semibold text-slate-700">Shared</h2>
-      </div>
-    </div>
-  );
+  return <EmptyState icon={<Share2 size={38} aria-hidden="true" />} title="Shared" />;
 }
 
 function normalizeDriveItems(folders: FolderItem[], files: FileItem[]): BrowserItem[] {

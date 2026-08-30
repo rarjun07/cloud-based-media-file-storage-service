@@ -26,26 +26,38 @@ export function ShareModal({ target, onClose }: ShareModalProps) {
 
   async function handleShare(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    await createShare.mutateAsync({ shared_with_email: email, role: shareRole });
-    setEmail("");
+    try {
+      await createShare.mutateAsync({ shared_with_email: email, role: shareRole });
+      setEmail("");
+    } catch {
+      return;
+    }
   }
 
   async function handleCreateLink() {
-    const response = await createPublicLink.mutateAsync({
-      role: linkRole,
-      expires_at: expiresAt ? new Date(expiresAt).toISOString() : undefined,
-      password: password || undefined,
-    });
-    setPublicLink(buildPublicLinkUrl(response.public_path));
-    setCopied(false);
+    try {
+      const response = await createPublicLink.mutateAsync({
+        role: linkRole,
+        expires_at: expiresAt ? new Date(expiresAt).toISOString() : undefined,
+        password: password || undefined,
+      });
+      setPublicLink(buildPublicLinkUrl(response.public_path));
+      setCopied(false);
+    } catch {
+      return;
+    }
   }
 
   async function copyLink() {
     if (!publicLink) {
       return;
     }
-    await navigator.clipboard.writeText(publicLink);
-    setCopied(true);
+    try {
+      await navigator.clipboard.writeText(publicLink);
+      setCopied(true);
+    } catch {
+      setCopied(false);
+    }
   }
 
   return (

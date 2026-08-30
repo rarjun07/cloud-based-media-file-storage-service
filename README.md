@@ -32,6 +32,7 @@ Current status:
 - Day 11: sharing UI and permissions pushed to GitHub
 - Day 12: search, sorting, and lazy loading pushed to GitHub
 - Day 13: trash UI, restore, and permanent delete pushed to GitHub
+- Day 14: deployment configuration and frontend polish pushed to GitHub
 
 ## Project Layout
 
@@ -187,6 +188,16 @@ docs/
 - Deleted-at timestamps exposed in file and folder responses
 - Day 13 implementation notes and verification
 
+## Day 14 Deliverables
+
+- Vercel deployment configuration for the React frontend
+- Production frontend environment example
+- Shared loading, empty, and error UI states
+- Improved mobile dashboard navigation
+- Safer async error handling in auth and sharing flows
+- Upload rejection handling for invalid files
+- Final deployment and polish notes
+
 ## Backend Local Setup
 
 ```bash
@@ -230,3 +241,17 @@ Frontend URL:
 ```text
 http://127.0.0.1:5173
 ```
+
+## Deployment
+
+Backend deployment target: Render, Fly.io, or Railway.
+
+Frontend deployment target: Vercel.
+
+Set this environment variable in Vercel before deploying:
+
+```text
+VITE_API_BASE_URL=https://your-backend-api.example.com/api/v1
+```
+
+The repository includes `vercel.json`, so Vercel can build the frontend from the monorepo root and serve `frontend/dist`.

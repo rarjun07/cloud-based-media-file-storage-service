@@ -7,8 +7,8 @@ type AuthShellProps = {
 
 export function AuthShell({ children }: AuthShellProps) {
   return (
-    <main className="min-h-screen bg-[#eef2f7] text-ink">
-      <div className="mx-auto grid min-h-screen max-w-6xl grid-cols-1 lg:grid-cols-[1fr_440px]">
+    <main className="min-h-dvh bg-[#eef2f7] text-ink">
+      <div className="mx-auto grid min-h-dvh max-w-6xl grid-cols-1 lg:grid-cols-[1fr_440px]">
         <section className="flex flex-col justify-between px-5 py-6 sm:px-8 lg:px-10">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand text-white">
@@ -22,7 +22,7 @@ export function AuthShell({ children }: AuthShellProps) {
 
           <div className="my-10 max-w-2xl">
             <p className="text-sm font-semibold uppercase tracking-wide text-brand">Secure drive workspace</p>
-            <h2 className="mt-4 max-w-xl text-4xl font-semibold leading-tight text-ink sm:text-5xl">
+            <h2 className="mt-4 max-w-xl text-3xl font-semibold leading-tight text-ink sm:text-5xl">
               Upload, organize, and share files with role-based access.
             </h2>
             <div className="mt-8 grid gap-3 sm:grid-cols-3">

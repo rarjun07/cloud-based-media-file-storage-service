@@ -22,18 +22,22 @@ export function AuthForm() {
     event.preventDefault();
     setMessage(null);
 
-    if (isSignup) {
-      await register.mutateAsync({
-        email,
-        password,
-        full_name: fullName || undefined,
-      });
-      await login.mutateAsync({ email, password });
-      setMessage("Account created.");
-      return;
-    }
+    try {
+      if (isSignup) {
+        await register.mutateAsync({
+          email,
+          password,
+          full_name: fullName || undefined,
+        });
+        await login.mutateAsync({ email, password });
+        setMessage("Account created.");
+        return;
+      }
 
-    await login.mutateAsync({ email, password });
+      await login.mutateAsync({ email, password });
+    } catch {
+      setMessage(null);
+    }
   }
 
   return (

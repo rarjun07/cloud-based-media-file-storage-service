@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { AlertCircle, FileText, Image, Loader2, UploadCloud, X } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -23,6 +23,7 @@ const acceptedMimeTypes = {
   "text/plain": [],
   "application/zip": [],
 };
+const maxUploadSizeBytes = 100 * 1024 * 1024;
 
 export function UploadPanel({ folderId }: UploadPanelProps) {
   const queryClient = useQueryClient();
@@ -47,6 +48,7 @@ export function UploadPanel({ folderId }: UploadPanelProps) {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: acceptedMimeTypes,
+    maxSize: maxUploadSizeBytes,
     maxFiles: 1,
     multiple: false,
     onDrop: (acceptedFiles) => {
@@ -63,7 +65,24 @@ export function UploadPanel({ folderId }: UploadPanelProps) {
       setState("idle");
       setError(null);
     },
+    onDropRejected: (rejections) => {
+      const rejection = rejections[0];
+      const reason = rejection?.errors[0]?.message ?? "File cannot be uploaded.";
+      setError(reason);
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      setProgress(0);
+      setState("failed");
+    },
   });
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   async function handleUpload() {
     if (!selectedFile) {
@@ -146,7 +165,7 @@ export function UploadPanel({ folderId }: UploadPanelProps) {
             </div>
 
             {error ? (
-              <div className="mt-3 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              <div className="mt-3 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
                 <AlertCircle className="mt-0.5 shrink-0" size={16} aria-hidden="true" />
                 <span>{error}</span>
               </div>

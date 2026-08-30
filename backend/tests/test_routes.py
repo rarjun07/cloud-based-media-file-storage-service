@@ -40,3 +40,7 @@ def test_auth_routes_are_registered_in_openapi() -> None:
     assert "/api/v1/trash" in paths
     assert "/api/v1/trash/files/{file_id}/restore" in paths
     assert "/api/v1/trash/folders/{folder_id}/restore" in paths
+    assert "/api/v1/trash/files/{file_id}" in paths
+    assert "delete" in paths["/api/v1/trash/files/{file_id}"]
+    assert "/api/v1/trash/folders/{folder_id}" in paths
+    assert "delete" in paths["/api/v1/trash/folders/{folder_id}"]

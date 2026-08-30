@@ -6,6 +6,7 @@ export type Folder = {
   parent_id: string | null;
   name: string;
   is_deleted: boolean;
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -32,6 +33,7 @@ export type FileItem = {
   checksum: string | null;
   upload_status: string;
   is_deleted: boolean;
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
 };

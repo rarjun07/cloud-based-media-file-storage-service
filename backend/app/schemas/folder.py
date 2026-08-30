@@ -47,6 +47,7 @@ class FolderRead(BaseModel):
     parent_id: UUID | None
     name: str
     is_deleted: bool
+    deleted_at: datetime | None
     created_at: datetime
     updated_at: datetime
 

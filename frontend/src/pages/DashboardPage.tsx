@@ -12,6 +12,7 @@ import {
   List,
   Loader2,
   LogOut,
+  RotateCcw,
   Search,
   Share2,
   Trash2,
@@ -22,9 +23,11 @@ import { getApiErrorMessage } from "../services/api";
 import { useCurrentUser, useLogout } from "../hooks/useAuth";
 import { buildBreadcrumbs, useDriveItems, useFolderDetail } from "../hooks/useDrive";
 import { useSearchItems } from "../hooks/useSearch";
+import { usePermanentDeleteTrashItem, useRestoreTrashItem, useTrash } from "../hooks/useTrash";
 import type { FileItem, Folder as FolderItem } from "../services/drive";
 import { ShareModal } from "../components/ShareModal";
 import type { ShareTarget } from "../services/sharing";
+import type { TrashTarget } from "../services/trash";
 import { UploadPanel } from "../components/UploadPanel";
 
 type ViewMode = "list" | "grid";
@@ -38,6 +41,9 @@ type BrowserItem = {
   mimeType: string | null;
   sizeBytes: number | null;
   updatedAt: string;
+};
+type TrashItem = BrowserItem & {
+  deletedAt: string | null;
 };
 
 const PAGE_SIZE = 12;
@@ -57,6 +63,9 @@ export function DashboardPage() {
   const folderDetail = useFolderDetail(currentFolderId);
   const driveItems = useDriveItems(activeSection === "my-drive" ? currentFolderId : null);
   const searchItems = useSearchItems(searchQuery, mimeType);
+  const trash = useTrash();
+  const restoreTrashItem = useRestoreTrashItem();
+  const permanentDeleteTrashItem = usePermanentDeleteTrashItem();
   const breadcrumbs = buildBreadcrumbs(currentFolderId, folderDetail.data?.breadcrumbs);
   const isSearchMode = Boolean(searchQuery.trim() || mimeType.trim());
   const items = useMemo(() => {
@@ -65,9 +74,19 @@ export function DashboardPage() {
       : normalizeDriveItems(driveItems.data?.folders ?? [], driveItems.data?.files ?? []);
     return sortItems(baseItems, sortBy, sortDirection);
   }, [driveItems.data, isSearchMode, searchItems.data, sortBy, sortDirection]);
+  const trashItems = useMemo(
+    () => normalizeTrashItems(trash.data?.folders ?? [], trash.data?.files ?? []),
+    [trash.data],
+  );
   const visibleItems = items.slice(0, visibleCount);
   const isLoading = isSearchMode ? searchItems.isLoading : driveItems.isLoading || folderDetail.isLoading;
   const error = isSearchMode ? searchItems.error : driveItems.error ?? folderDetail.error;
+  const pendingTrashAction =
+    restoreTrashItem.isPending && restoreTrashItem.variables
+      ? `restore-${restoreTrashItem.variables.type}-${restoreTrashItem.variables.id}`
+      : permanentDeleteTrashItem.isPending && permanentDeleteTrashItem.variables
+        ? `delete-${permanentDeleteTrashItem.variables.type}-${permanentDeleteTrashItem.variables.id}`
+        : null;
 
   function openSection(section: SectionKey) {
     setActiveSection(section);
@@ -80,6 +99,12 @@ export function DashboardPage() {
     setMimeType("");
     setCurrentFolderId(folderId);
     setVisibleCount(PAGE_SIZE);
+  }
+
+  function handlePermanentDelete(target: TrashTarget, name: string) {
+    if (window.confirm(`Permanently delete "${name}"? This cannot be undone.`)) {
+      permanentDeleteTrashItem.mutate(target);
+    }
   }
 
   return (
@@ -239,8 +264,18 @@ export function DashboardPage() {
                 onShowMore={() => setVisibleCount((count) => count + PAGE_SIZE)}
               />
             </>
+          ) : activeSection === "trash" ? (
+            <TrashContent
+              items={trashItems}
+              isLoading={trash.isLoading}
+              error={trash.error ?? restoreTrashItem.error ?? permanentDeleteTrashItem.error}
+              viewMode={viewMode}
+              pendingAction={pendingTrashAction}
+              onRestore={(target) => restoreTrashItem.mutate(target)}
+              onPermanentDelete={handlePermanentDelete}
+            />
           ) : (
-            <SectionPlaceholder section={activeSection} />
+            <SectionPlaceholder />
           )}
         </section>
       </div>
@@ -512,15 +547,212 @@ function ShareAction({ onClick, label }: { onClick: () => void; label: string })
   );
 }
 
-function SectionPlaceholder({ section }: { section: Exclude<SectionKey, "my-drive"> }) {
-  const label = section === "shared" ? "Shared" : "Trash";
-  const Icon = section === "shared" ? Share2 : Trash2;
+function TrashContent({
+  items,
+  isLoading,
+  error,
+  viewMode,
+  pendingAction,
+  onRestore,
+  onPermanentDelete,
+}: {
+  items: TrashItem[];
+  isLoading: boolean;
+  error: unknown;
+  viewMode: ViewMode;
+  pendingAction: string | null;
+  onRestore: (target: TrashTarget) => void;
+  onPermanentDelete: (target: TrashTarget, name: string) => void;
+}) {
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[360px] items-center justify-center">
+        <div className="flex items-center gap-3 rounded-lg border border-line bg-white px-5 py-4 shadow-sm">
+          <Loader2 className="animate-spin text-brand" size={20} aria-hidden="true" />
+          <span className="text-sm font-medium">Loading trash</span>
+        </div>
+      </div>
+    );
+  }
 
+  if (error) {
+    return (
+      <div className="mt-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        {getApiErrorMessage(error)}
+      </div>
+    );
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="mt-5 flex min-h-[360px] items-center justify-center rounded-lg border border-dashed border-line bg-white">
+        <div className="text-center">
+          <Trash2 className="mx-auto text-slate-300" size={38} aria-hidden="true" />
+          <h2 className="mt-3 text-lg font-semibold text-slate-700">Trash is empty</h2>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="mt-5 text-sm text-slate-500">{items.length} deleted items</div>
+      {viewMode === "grid" ? (
+        <TrashGrid
+          items={items}
+          pendingAction={pendingAction}
+          onRestore={onRestore}
+          onPermanentDelete={onPermanentDelete}
+        />
+      ) : (
+        <TrashList
+          items={items}
+          pendingAction={pendingAction}
+          onRestore={onRestore}
+          onPermanentDelete={onPermanentDelete}
+        />
+      )}
+    </>
+  );
+}
+
+function TrashList({
+  items,
+  pendingAction,
+  onRestore,
+  onPermanentDelete,
+}: {
+  items: TrashItem[];
+  pendingAction: string | null;
+  onRestore: (target: TrashTarget) => void;
+  onPermanentDelete: (target: TrashTarget, name: string) => void;
+}) {
+  return (
+    <div className="mt-3 overflow-x-auto rounded-lg border border-line bg-white shadow-sm">
+      <div className="min-w-[760px]">
+        <div className="grid grid-cols-[minmax(0,1fr)_120px_150px_120px_116px] border-b border-line bg-panel px-4 py-3 text-xs font-semibold uppercase text-slate-500">
+          <span>Name</span>
+          <span>Type</span>
+          <span>Deleted</span>
+          <span>Size</span>
+          <span>Actions</span>
+        </div>
+        {items.map((item) => (
+          <div
+            className="grid h-14 grid-cols-[minmax(0,1fr)_120px_150px_120px_116px] items-center border-b border-line px-4 transition hover:bg-blue-50"
+            key={`${item.kind}-${item.id}`}
+          >
+            <ItemName
+              icon={item.kind === "folder" ? <Folder size={19} /> : <FileText size={19} />}
+              name={item.name}
+            />
+            <span className="truncate text-sm text-slate-500">{item.kind === "folder" ? "Folder" : item.mimeType}</span>
+            <span className="text-sm text-slate-500">{formatOptionalDate(item.deletedAt)}</span>
+            <span className="text-sm text-slate-500">{item.sizeBytes === null ? "-" : formatBytes(item.sizeBytes)}</span>
+            <TrashActions
+              item={item}
+              pendingAction={pendingAction}
+              onRestore={onRestore}
+              onPermanentDelete={onPermanentDelete}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TrashGrid({
+  items,
+  pendingAction,
+  onRestore,
+  onPermanentDelete,
+}: {
+  items: TrashItem[];
+  pendingAction: string | null;
+  onRestore: (target: TrashTarget) => void;
+  onPermanentDelete: (target: TrashTarget, name: string) => void;
+}) {
+  return (
+    <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      {items.map((item) => (
+        <div className="min-h-36 rounded-lg border border-line bg-white p-4 shadow-sm" key={`${item.kind}-${item.id}`}>
+          <div className="flex items-start justify-between gap-3">
+            <ItemName
+              icon={item.kind === "folder" ? <Folder size={21} /> : <FileText size={21} />}
+              name={item.name}
+            />
+            <TrashActions
+              item={item}
+              pendingAction={pendingAction}
+              onRestore={onRestore}
+              onPermanentDelete={onPermanentDelete}
+            />
+          </div>
+          <p className="mt-3 truncate text-sm text-slate-500">{item.kind === "folder" ? "Folder" : item.mimeType}</p>
+          <p className="mt-1 text-sm text-slate-500">Deleted {formatOptionalDate(item.deletedAt)}</p>
+          <p className="mt-1 text-sm text-slate-500">{item.sizeBytes === null ? "-" : formatBytes(item.sizeBytes)}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function TrashActions({
+  item,
+  pendingAction,
+  onRestore,
+  onPermanentDelete,
+}: {
+  item: TrashItem;
+  pendingAction: string | null;
+  onRestore: (target: TrashTarget) => void;
+  onPermanentDelete: (target: TrashTarget, name: string) => void;
+}) {
+  const target = { id: item.id, type: item.kind };
+  const restoreKey = `restore-${item.kind}-${item.id}`;
+  const deleteKey = `delete-${item.kind}-${item.id}`;
+
+  return (
+    <div className="flex items-center gap-2">
+      <button
+        className="flex h-8 w-8 items-center justify-center rounded-md text-slate-500 transition hover:bg-white hover:text-brand disabled:cursor-not-allowed disabled:opacity-50"
+        type="button"
+        aria-label={`Restore ${item.name}`}
+        title={`Restore ${item.name}`}
+        onClick={() => onRestore(target)}
+        disabled={Boolean(pendingAction)}
+      >
+        {pendingAction === restoreKey ? (
+          <Loader2 className="animate-spin" size={16} aria-hidden="true" />
+        ) : (
+          <RotateCcw size={16} aria-hidden="true" />
+        )}
+      </button>
+      <button
+        className="flex h-8 w-8 items-center justify-center rounded-md text-slate-500 transition hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+        type="button"
+        aria-label={`Permanently delete ${item.name}`}
+        title={`Permanently delete ${item.name}`}
+        onClick={() => onPermanentDelete(target, item.name)}
+        disabled={Boolean(pendingAction)}
+      >
+        {pendingAction === deleteKey ? (
+          <Loader2 className="animate-spin" size={16} aria-hidden="true" />
+        ) : (
+          <Trash2 size={16} aria-hidden="true" />
+        )}
+      </button>
+    </div>
+  );
+}
+
+function SectionPlaceholder() {
   return (
     <div className="mt-5 flex min-h-[360px] items-center justify-center rounded-lg border border-dashed border-line bg-white">
       <div className="text-center">
-        <Icon className="mx-auto text-slate-300" size={38} aria-hidden="true" />
-        <h2 className="mt-3 text-lg font-semibold text-slate-700">{label}</h2>
+        <Share2 className="mx-auto text-slate-300" size={38} aria-hidden="true" />
+        <h2 className="mt-3 text-lg font-semibold text-slate-700">Shared</h2>
       </div>
     </div>
   );
@@ -567,6 +799,33 @@ function normalizeSearchItems(
   }));
 }
 
+function normalizeTrashItems(folders: FolderItem[], files: FileItem[]): TrashItem[] {
+  return [
+    ...folders.map((folder) => ({
+      id: folder.id,
+      kind: "folder" as const,
+      name: folder.name,
+      mimeType: null,
+      sizeBytes: null,
+      updatedAt: folder.updated_at,
+      deletedAt: folder.deleted_at,
+    })),
+    ...files.map((file) => ({
+      id: file.id,
+      kind: "file" as const,
+      name: file.name,
+      mimeType: file.mime_type,
+      sizeBytes: file.size_bytes,
+      updatedAt: file.updated_at,
+      deletedAt: file.deleted_at,
+    })),
+  ].sort((left, right) => {
+    const leftDeleted = left.deletedAt ? new Date(left.deletedAt).getTime() : 0;
+    const rightDeleted = right.deletedAt ? new Date(right.deletedAt).getTime() : 0;
+    return rightDeleted - leftDeleted;
+  });
+}
+
 function sortItems(items: BrowserItem[], sortBy: SortBy, direction: SortDirection) {
   const multiplier = direction === "asc" ? 1 : -1;
 
@@ -610,6 +869,10 @@ function formatDate(value: string) {
     day: "numeric",
     year: "numeric",
   }).format(new Date(value));
+}
+
+function formatOptionalDate(value: string | null) {
+  return value ? formatDate(value) : "-";
 }
 
 function formatBytes(value: number) {

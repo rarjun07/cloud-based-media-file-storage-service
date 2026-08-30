@@ -84,6 +84,7 @@ class FileRead(BaseModel):
     checksum: str | None
     upload_status: str
     is_deleted: bool
+    deleted_at: datetime | None
     created_at: datetime
     updated_at: datetime
 

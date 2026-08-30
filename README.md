@@ -31,6 +31,7 @@ Current status:
 - Day 10: file upload and preview UI pushed to GitHub
 - Day 11: sharing UI and permissions pushed to GitHub
 - Day 12: search, sorting, and lazy loading pushed to GitHub
+- Day 13: trash UI, restore, and permanent delete pushed to GitHub
 
 ## Project Layout
 
@@ -173,6 +174,18 @@ docs/
 - Show-more pagination for loaded results
 - Search result empty and loading states
 - Backend file response timestamps for frontend sorting
+
+## Day 13 Deliverables
+
+- Trash section connected to backend trash API
+- Deleted file and folder listing UI
+- Trash list and grid views
+- Restore deleted files and folders from frontend
+- Permanent delete actions from frontend
+- Backend permanent delete endpoints for trashed files and folders
+- Backend share/public-link cleanup before permanent delete
+- Deleted-at timestamps exposed in file and folder responses
+- Day 13 implementation notes and verification
 
 ## Backend Local Setup
 

@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.database import get_db_session
 from app.deps import get_current_user
-from app.models import File, FileUploadStatus, User
+from app.models import File, FileUploadStatus, Folder, ShareRole, User
 from app.schemas.file import (
     CompleteUploadRequest,
     FileRead,
@@ -15,7 +15,7 @@ from app.schemas.file import (
     InitUploadRequest,
     InitUploadResponse,
 )
-from app.services.folders import get_owned_active_folder
+from app.services.permissions import require_file_permission, require_folder_permission
 from app.services.storage import SIGNED_UPLOAD_EXPIRES_IN_SECONDS, build_storage_key, get_storage_service
 
 router = APIRouter(prefix="/files", tags=["files"])
@@ -28,9 +28,10 @@ async def init_upload(
     session: AsyncSession = Depends(get_db_session),
 ) -> InitUploadResponse:
     if payload.folder_id:
-        folder = await get_owned_active_folder(session, payload.folder_id, current_user.id)
+        folder = await session.get(Folder, payload.folder_id)
         if not folder:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Folder not found")
+        await require_folder_permission(session, folder, current_user.id, ShareRole.EDITOR)
 
     file_id = uuid.uuid4()
     storage_key = build_storage_key(current_user.id, file_id, payload.name)
@@ -71,8 +72,9 @@ async def complete_upload(
     session: AsyncSession = Depends(get_db_session),
 ) -> File:
     file = await session.get(File, payload.file_id)
-    if not file or file.owner_id != current_user.id or file.is_deleted:
+    if not file or file.is_deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+    await require_file_permission(session, file, current_user.id, ShareRole.EDITOR)
 
     file.upload_status = FileUploadStatus.COMPLETED.value
     file.checksum = payload.checksum or file.checksum
@@ -89,8 +91,9 @@ async def get_file(
     session: AsyncSession = Depends(get_db_session),
 ) -> File:
     file = await session.get(File, file_id)
-    if not file or file.owner_id != current_user.id or file.is_deleted:
+    if not file or file.is_deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+    await require_file_permission(session, file, current_user.id, ShareRole.VIEWER)
     return file
 
 
@@ -102,17 +105,19 @@ async def update_file(
     session: AsyncSession = Depends(get_db_session),
 ) -> File:
     file = await session.get(File, file_id)
-    if not file or file.owner_id != current_user.id or file.is_deleted:
+    if not file or file.is_deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+    await require_file_permission(session, file, current_user.id, ShareRole.EDITOR)
 
     if payload.name is not None:
         file.name = payload.name
 
     if "folder_id" in payload.model_fields_set:
         if payload.folder_id:
-            folder = await get_owned_active_folder(session, payload.folder_id, current_user.id)
+            folder = await session.get(Folder, payload.folder_id)
             if not folder:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Folder not found")
+            await require_folder_permission(session, folder, current_user.id, ShareRole.EDITOR)
         file.folder_id = payload.folder_id
 
     file.updated_at = datetime.now(UTC)
@@ -128,8 +133,9 @@ async def delete_file(
     session: AsyncSession = Depends(get_db_session),
 ) -> None:
     file = await session.get(File, file_id)
-    if not file or file.owner_id != current_user.id or file.is_deleted:
+    if not file or file.is_deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+    await require_file_permission(session, file, current_user.id, ShareRole.EDITOR)
 
     file.is_deleted = True
     file.deleted_at = datetime.now(UTC)

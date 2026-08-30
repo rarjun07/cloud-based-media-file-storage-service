@@ -31,3 +31,7 @@ def test_auth_routes_are_registered_in_openapi() -> None:
     assert "/api/v1/folders/{folder_id}" in paths
     assert "patch" in paths["/api/v1/folders/{folder_id}"]
     assert "delete" in paths["/api/v1/folders/{folder_id}"]
+    assert "/api/v1/shares" in paths
+    assert "/api/v1/shares/{share_id}" in paths
+    assert "/api/v1/public-link" in paths
+    assert "/api/v1/public-link/{token}" in paths

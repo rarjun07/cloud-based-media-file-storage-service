@@ -22,7 +22,8 @@ Current status:
 - Day 1: pushed to GitHub
 - Day 2: backend setup and authentication pushed to GitHub
 - Day 3: file upload and object storage pushed to GitHub
-- Day 4: folder system and file management completed locally
+- Day 4: folder system and file management pushed to GitHub
+- Day 5: sharing and permissions completed locally
 
 ## Project Layout
 
@@ -77,6 +78,16 @@ docs/
 - File soft-delete endpoint
 - Folder ownership validation for file uploads and moves
 - Tests for folder validation, breadcrumbs, cycle prevention, and route registration
+
+## Day 5 Deliverables
+
+- Share and public-link models
+- Viewer and Editor permission roles
+- Permission service for file and folder access
+- Private share APIs
+- Public share link APIs with expiry and optional password
+- File and folder route authorization based on Viewer/Editor permissions
+- Tests for share validation, public-link expiry, and route registration
 
 ## Backend Local Setup
 

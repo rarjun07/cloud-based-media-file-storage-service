@@ -35,3 +35,7 @@ def test_auth_routes_are_registered_in_openapi() -> None:
     assert "/api/v1/shares/{share_id}" in paths
     assert "/api/v1/public-link" in paths
     assert "/api/v1/public-link/{token}" in paths
+    assert "/api/v1/search" in paths
+    assert "/api/v1/trash" in paths
+    assert "/api/v1/trash/files/{file_id}/restore" in paths
+    assert "/api/v1/trash/folders/{folder_id}/restore" in paths

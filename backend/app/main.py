@@ -9,7 +9,9 @@ from app.routes.auth import router as auth_router
 from app.routes.files import router as files_router
 from app.routes.folders import router as folders_router
 from app.routes.health import router as health_router
+from app.routes.search import router as search_router
 from app.routes.shares import router as shares_router
+from app.routes.trash import router as trash_router
 
 
 @asynccontextmanager
@@ -25,4 +27,6 @@ app.include_router(auth_router, prefix=settings.api_v1_prefix)
 app.include_router(files_router, prefix=settings.api_v1_prefix)
 app.include_router(folders_router, prefix=settings.api_v1_prefix)
 app.include_router(health_router, prefix=settings.api_v1_prefix)
+app.include_router(search_router, prefix=settings.api_v1_prefix)
 app.include_router(shares_router, prefix=settings.api_v1_prefix)
+app.include_router(trash_router, prefix=settings.api_v1_prefix)

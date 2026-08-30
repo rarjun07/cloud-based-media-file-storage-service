@@ -2,7 +2,7 @@ import uuid
 from datetime import UTC, datetime
 from enum import StrEnum
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, String
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
@@ -16,6 +16,11 @@ class ShareRole(StrEnum):
 
 class Share(Base):
     __tablename__ = "shares"
+    __table_args__ = (
+        Index("ix_shares_shared_user_file", "shared_with_user_id", "file_id"),
+        Index("ix_shares_shared_user_folder", "shared_with_user_id", "folder_id"),
+        Index("ix_shares_owner_created", "owner_id", "created_at"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     owner_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True, nullable=False)
@@ -38,6 +43,9 @@ class Share(Base):
 
 class LinkShare(Base):
     __tablename__ = "link_shares"
+    __table_args__ = (
+        Index("ix_link_shares_active_expires", "is_active", "expires_at"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     created_by: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True, nullable=False)

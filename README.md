@@ -23,7 +23,8 @@ Current status:
 - Day 2: backend setup and authentication pushed to GitHub
 - Day 3: file upload and object storage pushed to GitHub
 - Day 4: folder system and file management pushed to GitHub
-- Day 5: sharing and permissions completed locally
+- Day 5: sharing and permissions pushed to GitHub
+- Day 6: search, trash, and optimization completed locally
 
 ## Project Layout
 
@@ -88,6 +89,18 @@ docs/
 - Public share link APIs with expiry and optional password
 - File and folder route authorization based on Viewer/Editor permissions
 - Tests for share validation, public-link expiry, and route registration
+
+## Day 6 Deliverables
+
+- Search API for files and folders
+- Name-based search
+- MIME type search for files
+- Trash listing API
+- Restore deleted files
+- Restore deleted folders
+- Restore logic that moves items to root if their old parent is still deleted
+- Database indexes for file, folder, share, and public-link query paths
+- Tests for indexes, restore behavior, and route registration
 
 ## Backend Local Setup
 

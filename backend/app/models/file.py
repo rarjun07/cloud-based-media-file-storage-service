@@ -2,7 +2,7 @@ import uuid
 from datetime import UTC, datetime
 from enum import StrEnum
 
-from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, String
+from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Index, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
@@ -16,6 +16,11 @@ class FileUploadStatus(StrEnum):
 
 class File(Base):
     __tablename__ = "files"
+    __table_args__ = (
+        Index("ix_files_owner_deleted_name", "owner_id", "is_deleted", "name"),
+        Index("ix_files_owner_deleted_mime_type", "owner_id", "is_deleted", "mime_type"),
+        Index("ix_files_folder_deleted", "folder_id", "is_deleted"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     owner_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True, nullable=False)

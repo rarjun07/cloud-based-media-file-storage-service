@@ -2,6 +2,7 @@ import pytest
 from pydantic import ValidationError
 
 from app.schemas.file import InitUploadRequest
+from app.schemas.file import FileUpdate
 from app.services.storage import SupabaseStorageService, build_storage_key
 
 
@@ -13,6 +14,11 @@ def test_init_upload_request_rejects_path_separator() -> None:
 def test_init_upload_request_rejects_disallowed_mime_type() -> None:
     with pytest.raises(ValidationError):
         InitUploadRequest(name="script.js", mime_type="application/javascript", size_bytes=1024)
+
+
+def test_file_update_rejects_path_separator() -> None:
+    with pytest.raises(ValidationError):
+        FileUpdate(name="bad/file.png")
 
 
 def test_storage_key_includes_user_and_file_ids(sample_uuid) -> None:

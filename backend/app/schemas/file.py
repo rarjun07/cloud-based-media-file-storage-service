@@ -53,6 +53,23 @@ class CompleteUploadRequest(BaseModel):
     checksum: str | None = Field(default=None, max_length=128)
 
 
+class FileUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=255)
+    folder_id: UUID | None = None
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("File name is required")
+        if "/" in cleaned or "\\" in cleaned:
+            raise ValueError("File name must not include path separators")
+        return cleaned
+
+
 class FileRead(BaseModel):
     id: UUID
     owner_id: UUID

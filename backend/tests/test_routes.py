@@ -25,3 +25,9 @@ def test_auth_routes_are_registered_in_openapi() -> None:
     assert "/api/v1/files/init-upload" in paths
     assert "/api/v1/files/complete-upload" in paths
     assert "/api/v1/files/{file_id}" in paths
+    assert "patch" in paths["/api/v1/files/{file_id}"]
+    assert "delete" in paths["/api/v1/files/{file_id}"]
+    assert "/api/v1/folders" in paths
+    assert "/api/v1/folders/{folder_id}" in paths
+    assert "patch" in paths["/api/v1/folders/{folder_id}"]
+    assert "delete" in paths["/api/v1/folders/{folder_id}"]

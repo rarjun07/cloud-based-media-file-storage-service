@@ -21,7 +21,8 @@ Current status:
 - Day 1: Requirement analysis and database design files completed
 - Day 1: pushed to GitHub
 - Day 2: backend setup and authentication pushed to GitHub
-- Day 3: file upload and object storage completed locally
+- Day 3: file upload and object storage pushed to GitHub
+- Day 4: folder system and file management completed locally
 
 ## Project Layout
 
@@ -64,6 +65,18 @@ docs/
 - File upload validation for size, type, and safe names
 - File routes: init upload, complete upload, get file metadata
 - Tests for upload validation, storage key generation, signed URL parsing, and route registration
+
+## Day 4 Deliverables
+
+- Folder metadata model
+- Folder routes: create, list, get with breadcrumbs, update, delete
+- Nested folder support through `parent_id`
+- Breadcrumb service for folder navigation
+- Folder cycle prevention
+- File rename and move endpoint
+- File soft-delete endpoint
+- Folder ownership validation for file uploads and moves
+- Tests for folder validation, breadcrumbs, cycle prevention, and route registration
 
 ## Backend Local Setup
 

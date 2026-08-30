@@ -8,7 +8,14 @@ from app.core.config import settings
 from app.core.database import get_db_session
 from app.deps import get_current_user
 from app.models import File, FileUploadStatus, User
-from app.schemas.file import CompleteUploadRequest, FileRead, InitUploadRequest, InitUploadResponse
+from app.schemas.file import (
+    CompleteUploadRequest,
+    FileRead,
+    FileUpdate,
+    InitUploadRequest,
+    InitUploadResponse,
+)
+from app.services.folders import get_owned_active_folder
 from app.services.storage import SIGNED_UPLOAD_EXPIRES_IN_SECONDS, build_storage_key, get_storage_service
 
 router = APIRouter(prefix="/files", tags=["files"])
@@ -20,6 +27,11 @@ async def init_upload(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ) -> InitUploadResponse:
+    if payload.folder_id:
+        folder = await get_owned_active_folder(session, payload.folder_id, current_user.id)
+        if not folder:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Folder not found")
+
     file_id = uuid.uuid4()
     storage_key = build_storage_key(current_user.id, file_id, payload.name)
     storage_service = get_storage_service()
@@ -80,3 +92,46 @@ async def get_file(
     if not file or file.owner_id != current_user.id or file.is_deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
     return file
+
+
+@router.patch("/{file_id}", response_model=FileRead)
+async def update_file(
+    file_id: uuid.UUID,
+    payload: FileUpdate,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> File:
+    file = await session.get(File, file_id)
+    if not file or file.owner_id != current_user.id or file.is_deleted:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+
+    if payload.name is not None:
+        file.name = payload.name
+
+    if "folder_id" in payload.model_fields_set:
+        if payload.folder_id:
+            folder = await get_owned_active_folder(session, payload.folder_id, current_user.id)
+            if not folder:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Folder not found")
+        file.folder_id = payload.folder_id
+
+    file.updated_at = datetime.now(UTC)
+    await session.commit()
+    await session.refresh(file)
+    return file
+
+
+@router.delete("/{file_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_file(
+    file_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> None:
+    file = await session.get(File, file_id)
+    if not file or file.owner_id != current_user.id or file.is_deleted:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+
+    file.is_deleted = True
+    file.deleted_at = datetime.now(UTC)
+    file.updated_at = file.deleted_at
+    await session.commit()

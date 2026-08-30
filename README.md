@@ -19,8 +19,9 @@ Each day is completed as a separate Git commit before starting the next day.
 Current status:
 
 - Day 1: Requirement analysis and database design files completed
-- Git: Day 1 committed locally
-- Day 2: Backend setup and authentication completed locally
+- Day 1: pushed to GitHub
+- Day 2: backend setup and authentication pushed to GitHub
+- Day 3: file upload and object storage completed locally
 
 ## Project Layout
 
@@ -53,6 +54,16 @@ docs/
 - Auth routes: register, login, refresh, me, logout
 - Protected current-user dependency
 - Tests for route registration and security helpers
+
+## Day 3 Deliverables
+
+- File metadata model
+- Upload status tracking
+- File upload request/response schemas
+- Supabase Storage signed-upload service
+- File upload validation for size, type, and safe names
+- File routes: init upload, complete upload, get file metadata
+- Tests for upload validation, storage key generation, signed URL parsing, and route registration
 
 ## Backend Local Setup
 

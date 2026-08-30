@@ -22,3 +22,6 @@ def test_auth_routes_are_registered_in_openapi() -> None:
     assert "/api/v1/auth/login" in paths
     assert "/api/v1/auth/refresh" in paths
     assert "/api/v1/auth/me" in paths
+    assert "/api/v1/files/init-upload" in paths
+    assert "/api/v1/files/complete-upload" in paths
+    assert "/api/v1/files/{file_id}" in paths

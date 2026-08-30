@@ -1,4 +1,8 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+BACKEND_DIR = Path(__file__).resolve().parents[2]
 
 
 class Settings(BaseSettings):
@@ -21,8 +25,22 @@ class Settings(BaseSettings):
     supabase_url: str = ""
     supabase_service_role_key: str = ""
     supabase_storage_bucket: str = "media-files"
+    storage_provider: str = "supabase"
+    max_upload_size_bytes: int = 104_857_600
+    allowed_upload_mime_types: str = (
+        "image/jpeg,image/png,image/webp,image/gif,application/pdf,"
+        "video/mp4,audio/mpeg,text/plain,application/zip"
+    )
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(env_file=BACKEND_DIR / ".env", env_file_encoding="utf-8")
+
+    @property
+    def allowed_upload_mime_type_set(self) -> set[str]:
+        return {
+            mime_type.strip()
+            for mime_type in self.allowed_upload_mime_types.split(",")
+            if mime_type.strip()
+        }
 
 
 settings = Settings()

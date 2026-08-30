@@ -2,6 +2,7 @@ import uuid
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -82,6 +83,33 @@ async def complete_upload(
     await session.commit()
     await session.refresh(file)
     return file
+
+
+@router.get("", response_model=list[FileRead])
+async def list_files(
+    folder_id: uuid.UUID | None = None,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> list[File]:
+    if folder_id:
+        folder = await session.get(Folder, folder_id)
+        if not folder or folder.is_deleted:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Folder not found")
+        await require_folder_permission(session, folder, current_user.id, ShareRole.VIEWER)
+        owner_filter = File.folder_id == folder_id
+    else:
+        owner_filter = File.owner_id == current_user.id
+
+    result = await session.execute(
+        select(File)
+        .where(
+            owner_filter,
+            File.folder_id == folder_id,
+            File.is_deleted.is_(False),
+        )
+        .order_by(File.name.asc())
+    )
+    return list(result.scalars().all())
 
 
 @router.get("/{file_id}", response_model=FileRead)

@@ -2,7 +2,7 @@ import { Loader2 } from "lucide-react";
 
 import { useCurrentUser } from "./hooks/useAuth";
 import { AuthPage } from "./pages/AuthPage";
-import { DashboardStub } from "./pages/DashboardStub";
+import { DashboardPage } from "./pages/DashboardPage";
 
 export default function App() {
   const { data: user, isLoading } = useCurrentUser();
@@ -18,5 +18,5 @@ export default function App() {
     );
   }
 
-  return user ? <DashboardStub /> : <AuthPage />;
+  return user ? <DashboardPage /> : <AuthPage />;
 }

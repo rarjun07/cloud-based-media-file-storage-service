@@ -27,6 +27,7 @@ Current status:
 - Day 6: search, trash, and optimization pushed to GitHub
 - Day 7: backend testing and deployment readiness pushed to GitHub
 - Day 8: frontend setup and auth UI pushed to GitHub
+- Day 9: dashboard and file listing UI pushed to GitHub
 
 ## Project Layout
 
@@ -124,6 +125,17 @@ docs/
 - Current-user session check
 - Logout action
 - Cookie-based auth integration with backend
+
+## Day 9 Deliverables
+
+- Drive-style dashboard layout
+- Sidebar navigation for My Drive, Shared, and Trash
+- File and folder listing UI
+- Breadcrumb navigation
+- List and grid view toggle
+- Frontend file/folder services
+- React Query hooks for drive data
+- Backend `GET /api/v1/files` listing endpoint for folder contents
 
 ## Backend Local Setup
 

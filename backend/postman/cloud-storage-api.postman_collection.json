@@ -1,0 +1,169 @@
+{
+  "info": {
+    "name": "Cloud Based Media File Storage Service API",
+    "description": "Day 7 API testing collection for the FastAPI backend.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/health"
+      }
+    },
+    {
+      "name": "Auth - Register",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\":\"intern@example.com\",\"password\":\"Password123\",\"full_name\":\"Intern User\"}"
+        },
+        "url": "{{base_url}}/auth/register"
+      }
+    },
+    {
+      "name": "Auth - Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const data = pm.response.json();",
+              "if (data.access_token) pm.environment.set('access_token', data.access_token);",
+              "if (data.refresh_token) pm.environment.set('refresh_token', data.refresh_token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\":\"intern@example.com\",\"password\":\"Password123\"}"
+        },
+        "url": "{{base_url}}/auth/login"
+      }
+    },
+    {
+      "name": "Auth - Me",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/auth/me"
+      }
+    },
+    {
+      "name": "Folders - Create",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const data = pm.response.json();",
+              "if (data.id) pm.environment.set('folder_id', data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\":\"Project Files\"}"
+        },
+        "url": "{{base_url}}/folders"
+      }
+    },
+    {
+      "name": "Files - Init Upload",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const data = pm.response.json();",
+              "if (data.file_id) pm.environment.set('file_id', data.file_id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\":\"sample.pdf\",\"mime_type\":\"application/pdf\",\"size_bytes\":1024,\"folder_id\":\"{{folder_id}}\"}"
+        },
+        "url": "{{base_url}}/files/init-upload"
+      }
+    },
+    {
+      "name": "Files - Complete Upload",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"file_id\":\"{{file_id}}\"}"
+        },
+        "url": "{{base_url}}/files/complete-upload"
+      }
+    },
+    {
+      "name": "Search",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/search?q=sample&mime_type=application/pdf"
+      }
+    },
+    {
+      "name": "Trash - List",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/trash"
+      }
+    }
+  ]
+}

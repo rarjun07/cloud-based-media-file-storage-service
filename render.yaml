@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: cloud-based-media-file-storage-service-api
+    runtime: python
+    plan: free
+    branch: main
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: API_V1_PREFIX
+        value: /api/v1
+      - key: CREATE_TABLES_ON_STARTUP
+        value: false
+      - key: SECURE_COOKIES
+        value: true
+      - key: STORAGE_PROVIDER
+        value: supabase
+      - key: SUPABASE_STORAGE_BUCKET
+        value: media-files
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false

@@ -24,7 +24,8 @@ Current status:
 - Day 3: file upload and object storage pushed to GitHub
 - Day 4: folder system and file management pushed to GitHub
 - Day 5: sharing and permissions pushed to GitHub
-- Day 6: search, trash, and optimization completed locally
+- Day 6: search, trash, and optimization pushed to GitHub
+- Day 7: backend testing and deployment readiness completed locally
 
 ## Project Layout
 
@@ -102,13 +103,23 @@ docs/
 - Database indexes for file, folder, share, and public-link query paths
 - Tests for indexes, restore behavior, and route registration
 
+## Day 7 Deliverables
+
+- Render Blueprint deployment config
+- Production preflight script
+- Pytest configuration
+- Postman collection and local environment
+- Deployment documentation
+- Tests for deployment config and API testing artifacts
+
 ## Backend Local Setup
 
 ```bash
 python3 -m venv .venv
 .venv/bin/python -m pip install -r backend/requirements.txt
 cp backend/.env.example backend/.env
-PYTHONPATH=backend .venv/bin/uvicorn app.main:app --reload
+cd backend
+../.venv/bin/uvicorn app.main:app --reload
 ```
 
 API docs:
@@ -120,5 +131,13 @@ http://127.0.0.1:8000/docs
 Run tests:
 
 ```bash
-PYTHONPATH=backend .venv/bin/python -m pytest backend/tests
+cd backend
+../.venv/bin/python -m pytest
+```
+
+Deployment preflight:
+
+```bash
+cd backend
+../.venv/bin/python scripts/preflight.py
 ```

@@ -105,7 +105,7 @@ export function getApiErrorMessage(error: unknown): string {
 
   if (axios.isAxiosError(error)) {
     if (!error.response) {
-      return "Backend API is not reachable. Start the FastAPI server on http://127.0.0.1:8000 and try again.";
+      return "CloudDrive cannot reach the API right now. Refresh the page and try again.";
     }
 
     const detail = error.response?.data?.detail;

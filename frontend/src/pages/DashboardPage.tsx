@@ -151,7 +151,7 @@ export function DashboardPage() {
   const visibleSharedItems = sharedBrowserItems.slice(0, visibleCount);
   const visibleStarredItems = starredBrowserItems.slice(0, visibleCount);
   const isLoading = isSearchMode ? searchItems.isLoading : driveItems.isLoading || folderDetail.isLoading;
-  const error = isSearchMode ? searchItems.error : driveItems.error ?? folderDetail.error ?? actionError;
+  const error = isSearchMode ? searchItems.error : driveItems.error ?? folderDetail.error;
   const pendingTrashAction =
     restoreTrashItem.isPending && restoreTrashItem.variables
       ? `restore-${restoreTrashItem.variables.type}-${restoreTrashItem.variables.id}`
@@ -161,6 +161,7 @@ export function DashboardPage() {
 
   function openSection(section: SectionKey) {
     setActiveTopMenu(null);
+    setActionError(null);
     setActiveSection(section);
     setCurrentFolderId(null);
     setSearchQuery("");
@@ -169,6 +170,7 @@ export function DashboardPage() {
   }
 
   function openFolder(folderId: string) {
+    setActionError(null);
     setActiveSection("my-drive");
     setSearchQuery("");
     setMimeType("");
@@ -545,6 +547,8 @@ export function DashboardPage() {
                 isSearchMode={isSearchMode}
                 isLoading={isLoading}
                 error={error}
+                emptyTitle="No data yet"
+                emptyDescription="Upload a file or create a folder in My Drive to see items here."
                 viewMode={viewMode}
                 onOpenFolder={openFolder}
                 onOpenFile={openFile}
@@ -574,6 +578,8 @@ export function DashboardPage() {
                 isSearchMode={isSearchMode}
                 isLoading={isLoading}
                 error={error}
+                emptyTitle="My Drive is empty"
+                emptyDescription="Drop a file above or use New to create your first folder."
                 viewMode={viewMode}
                 onOpenFolder={openFolder}
                 onOpenFile={openFile}
@@ -593,7 +599,9 @@ export function DashboardPage() {
               visibleCount={visibleCount}
               isSearchMode={false}
               isLoading={starredItems.isLoading}
-              error={starredItems.error ?? actionError}
+              error={starredItems.error}
+              emptyTitle="No starred items"
+              emptyDescription="Star files or folders to keep them here for quick access."
               viewMode={viewMode}
               onOpenFolder={openFolder}
               onOpenFile={openFile}
@@ -612,7 +620,9 @@ export function DashboardPage() {
               visibleCount={visibleCount}
               isSearchMode={false}
               isLoading={sharedItems.isLoading}
-              error={sharedItems.error ?? actionError}
+              error={sharedItems.error}
+              emptyTitle="No shared items"
+              emptyDescription="Files and folders shared with you will appear here."
               viewMode={viewMode}
               onOpenFolder={openFolder}
               onOpenFile={openFile}
@@ -637,6 +647,7 @@ export function DashboardPage() {
               onPermanentDelete={handlePermanentDelete}
             />
           ) : null}
+          {actionError ? <ErrorState message={actionError} /> : null}
         </section>
       </div>
       {shareTarget ? <ShareModal target={shareTarget} onClose={() => setShareTarget(null)} /> : null}
@@ -1067,6 +1078,8 @@ function DriveContent({
   isSearchMode,
   isLoading,
   error,
+  emptyTitle,
+  emptyDescription,
   viewMode,
   onOpenFolder,
   onOpenFile,
@@ -1084,6 +1097,8 @@ function DriveContent({
   isSearchMode: boolean;
   isLoading: boolean;
   error: unknown;
+  emptyTitle?: string;
+  emptyDescription?: string;
   viewMode: ViewMode;
   onOpenFolder: (folderId: string) => void;
   onOpenFile: (item: BrowserItem, mode?: "preview" | "download") => void;
@@ -1104,7 +1119,13 @@ function DriveContent({
   }
 
   if (totalCount === 0) {
-    return <EmptyState icon={<Folder size={38} aria-hidden="true" />} title={isSearchMode ? "No matching items" : "No files or folders"} />;
+    return (
+      <EmptyState
+        icon={<Folder size={38} aria-hidden="true" />}
+        title={isSearchMode ? "No matching items" : emptyTitle ?? "No files or folders"}
+        description={isSearchMode ? "Try another search or clear the filters." : emptyDescription ?? "Upload a file or create a folder to get started."}
+      />
+    );
   }
 
   return (
@@ -1680,7 +1701,11 @@ function VersionsModal({ target, onClose }: { target: BrowserItem; onClose: () =
               ))}
             </div>
           ) : (
-            <EmptyState icon={<Clock3 size={38} aria-hidden="true" />} title="No versions recorded" />
+            <EmptyState
+              icon={<Clock3 size={38} aria-hidden="true" />}
+              title="No versions recorded"
+              description="New versions will appear after uploads are completed."
+            />
           )}
         </div>
       </section>
@@ -1706,7 +1731,13 @@ function ActivityContent({
   }
 
   if (activities.length === 0) {
-    return <EmptyState icon={<Clock3 size={38} aria-hidden="true" />} title="No activity yet" />;
+    return (
+      <EmptyState
+        icon={<Clock3 size={38} aria-hidden="true" />}
+        title="No activity yet"
+        description="Uploads, edits, shares, and deletes will appear here."
+      />
+    );
   }
 
   return (
@@ -1754,7 +1785,13 @@ function TrashContent({
   }
 
   if (items.length === 0) {
-    return <EmptyState icon={<Trash2 size={38} aria-hidden="true" />} title="Trash is empty" />;
+    return (
+      <EmptyState
+        icon={<Trash2 size={38} aria-hidden="true" />}
+        title="Trash is empty"
+        description="Deleted files and folders will appear here before permanent deletion."
+      />
+    );
   }
 
   return (

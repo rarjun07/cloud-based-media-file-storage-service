@@ -35,12 +35,13 @@ export function ErrorState({ message }: { message: string }) {
   );
 }
 
-export function EmptyState({ icon, title }: { icon: ReactNode; title: string }) {
+export function EmptyState({ icon, title, description }: { icon: ReactNode; title: string; description?: string }) {
   return (
     <div className="mt-5 flex min-h-[360px] items-center justify-center rounded-[28px] border border-dashed border-[#a8c4bb] bg-white/62 px-4 shadow-inner">
       <div className="text-center">
         <span className="mx-auto flex justify-center text-[#9bb7ad]">{icon}</span>
         <h2 className="mt-3 text-xl font-black text-ink">{title}</h2>
+        {description ? <p className="mx-auto mt-2 max-w-md text-sm font-semibold leading-6 text-[#6e827c]">{description}</p> : null}
       </div>
     </div>
   );

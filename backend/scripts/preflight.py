@@ -5,7 +5,13 @@ from pathlib import Path
 
 
 REQUIRED_PRODUCTION_ENV_VARS = (
+    "BACKEND_URL",
+    "CORS_ORIGINS",
     "DATABASE_URL",
+    "FRONTEND_URL",
+    "GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET",
+    "GOOGLE_REDIRECT_URI",
     "JWT_SECRET_KEY",
     "SUPABASE_URL",
     "SUPABASE_SERVICE_ROLE_KEY",
@@ -22,6 +28,8 @@ def main() -> None:
         if missing:
             missing_names = ", ".join(missing)
             raise SystemExit(f"Missing production environment variables: {missing_names}")
+        if os.getenv("JWT_SECRET_KEY") == "change-me":
+            raise SystemExit("JWT_SECRET_KEY must be changed for production")
 
     import_module("app.main")
     print("Backend preflight checks passed")

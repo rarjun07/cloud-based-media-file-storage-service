@@ -1,6 +1,7 @@
 fastapi
 uvicorn[standard]
 SQLAlchemy
+greenlet
 asyncpg
 alembic
 pydantic-settings
@@ -11,3 +12,4 @@ email-validator
 pytest
 httpx
 PyYAML
+slowapi

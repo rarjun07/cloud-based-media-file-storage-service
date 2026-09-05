@@ -29,6 +29,14 @@ def test_share_create_rejects_owner_role(sample_uuid) -> None:
         )
 
 
+def test_public_link_create_rejects_editor_role(sample_uuid) -> None:
+    with pytest.raises(ValidationError):
+        PublicLinkCreate(
+            role=ShareRole.EDITOR,
+            file_id=sample_uuid("00000000-0000-0000-0000-000000000001"),
+        )
+
+
 def test_public_link_create_requires_future_expiry(sample_uuid) -> None:
     with pytest.raises(ValidationError):
         PublicLinkCreate(

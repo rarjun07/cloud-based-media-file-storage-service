@@ -123,17 +123,17 @@ export function UploadPanel({ folderId }: UploadPanelProps) {
   }
 
   return (
-    <section className="mt-5 rounded-lg border border-line bg-white p-4 shadow-sm">
+    <section className="mt-5 rounded-[28px] border border-white/75 bg-white/66 p-5 shadow-md shadow-[#092c28]/10 backdrop-blur-xl">
       <div
         {...getRootProps()}
-        className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed px-4 py-7 text-center transition ${
-          isDragActive ? "border-brand bg-blue-50" : "border-line bg-panel hover:border-blue-300"
+        className={`flex cursor-pointer flex-col items-center justify-center rounded-[24px] border border-dashed px-4 py-8 text-center transition ${
+          isDragActive ? "border-brand bg-[#dff0e8]" : "border-[#a8c4bb] bg-[#eef7f3]/70 hover:border-brand hover:bg-white/72"
         }`}
       >
         <input {...getInputProps()} />
         <UploadCloud className="text-brand" size={30} aria-hidden="true" />
-        <h2 className="mt-3 text-sm font-semibold text-ink">Drop a file here or browse</h2>
-        <p className="mt-1 text-xs text-slate-500">Images, PDFs, video, audio, text, and zip files up to 100 MB</p>
+        <h2 className="mt-3 text-base font-black text-ink">Drop a file here or browse</h2>
+        <p className="mt-1 text-sm font-semibold text-[#6e827c]">Images, PDFs, video, audio, text, and zip files up to 100 MB</p>
       </div>
 
       {selectedFile ? (
@@ -142,11 +142,11 @@ export function UploadPanel({ folderId }: UploadPanelProps) {
           <div className="min-w-0">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-ink">{selectedFile.name}</p>
-                <p className="mt-1 text-xs text-slate-500">{selectedFile.type || "Unknown type"}</p>
+                <p className="truncate text-sm font-extrabold text-ink">{selectedFile.name}</p>
+                <p className="mt-1 text-xs font-semibold text-[#6e827c]">{selectedFile.type || "Unknown type"}</p>
               </div>
               <button
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-[#6e827c] hover:bg-white hover:text-brand"
                 type="button"
                 aria-label="Clear selected file"
                 title="Clear selected file"
@@ -156,10 +156,10 @@ export function UploadPanel({ folderId }: UploadPanelProps) {
               </button>
             </div>
 
-            <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100">
-              <div className="h-full rounded-full bg-brand transition-all" style={{ width: `${progress}%` }} />
+            <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#d5ebe2]">
+              <div className="h-full rounded-full bg-[linear-gradient(135deg,#0f2b28_0%,#1c6a61_74%,#62aa98_150%)] transition-all" style={{ width: `${progress}%` }} />
             </div>
-            <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
+            <div className="mt-2 flex items-center justify-between text-xs font-bold text-[#6e827c]">
               <span>{state === "completed" ? "Upload complete" : "Upload progress"}</span>
               <span>{progress}%</span>
             </div>
@@ -172,7 +172,7 @@ export function UploadPanel({ folderId }: UploadPanelProps) {
             ) : null}
 
             <button
-              className="mt-4 flex h-10 items-center justify-center gap-2 rounded-lg bg-brand px-4 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+              className="mt-4 flex h-12 items-center justify-center gap-2 rounded-2xl bg-[linear-gradient(135deg,#0f2b28_0%,#1c6a61_74%,#62aa98_150%)] px-5 text-sm font-extrabold text-[#f6fbf8] shadow-md shadow-[#092c28]/15 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:bg-[#8ac7b0] disabled:shadow-none"
               type="button"
               onClick={() => void handleUpload()}
               disabled={state === "uploading" || state === "completed"}
@@ -198,7 +198,7 @@ function Preview({
 }) {
   if (previewType === "image" && previewUrl) {
     return (
-      <div className="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-lg border border-line bg-slate-100">
+      <div className="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-2xl border border-white/75 bg-[#dff0e8]">
         <img className="h-full w-full object-cover" src={previewUrl} alt={fileName} />
       </div>
     );
@@ -207,7 +207,7 @@ function Preview({
   if (previewType === "pdf" && previewUrl) {
     return (
       <iframe
-        className="aspect-[4/3] w-full rounded-lg border border-line bg-slate-100"
+        className="aspect-[4/3] w-full rounded-2xl border border-white/75 bg-[#dff0e8]"
         src={previewUrl}
         title={fileName}
       />
@@ -215,7 +215,7 @@ function Preview({
   }
 
   return (
-    <div className="flex aspect-[4/3] items-center justify-center rounded-lg border border-line bg-slate-100 text-brand">
+    <div className="flex aspect-[4/3] items-center justify-center rounded-2xl border border-white/75 bg-[#dff0e8] text-brand">
       {previewType === "file" ? <FileText size={42} aria-hidden="true" /> : <Image size={42} aria-hidden="true" />}
     </div>
   );

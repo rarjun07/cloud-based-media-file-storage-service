@@ -89,3 +89,22 @@ class FileRead(BaseModel):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class FileDownloadResponse(BaseModel):
+    file_id: UUID
+    download_url: str
+    expires_in_seconds: int
+
+
+class FileVersionRead(BaseModel):
+    id: UUID
+    file_id: UUID
+    created_by: UUID
+    version_number: int
+    storage_key: str
+    size_bytes: int
+    checksum: str | None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)

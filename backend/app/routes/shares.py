@@ -4,22 +4,28 @@ import uuid
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db_session
 from app.core.security import hash_password, verify_password
 from app.deps import get_current_user
 from app.models import File, Folder, LinkShare, Share, ShareRole, User
+from app.schemas.file import FileDownloadResponse
 from app.schemas.share import (
     PublicLinkAccessRequest,
     PublicLinkAccessResponse,
     PublicLinkCreate,
     PublicLinkCreateResponse,
+    PublicLinkFileEntry,
     ShareCreate,
     ShareRead,
+    SharedItemsResponse,
 )
+from app.services.activity import add_activity
 from app.services.permissions import public_link_is_expired
+from app.services.storage import get_storage_service
+from app.core.config import settings
 
 router = APIRouter(tags=["sharing"])
 
@@ -54,6 +60,7 @@ async def create_share(
         role=payload.role.value,
     )
     session.add(share)
+    add_activity(session, user_id=current_user.id, action="create_share", file_id=payload.file_id, folder_id=payload.folder_id)
     await session.commit()
     await session.refresh(share)
     return _serialize_share(share, shared_user)
@@ -93,7 +100,30 @@ async def delete_share(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Share not found")
 
     await session.delete(share)
+    add_activity(session, user_id=current_user.id, action="delete_share", file_id=share.file_id, folder_id=share.folder_id)
     await session.commit()
+
+
+@router.get("/shared-with-me", response_model=SharedItemsResponse)
+async def list_shared_with_me(
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> SharedItemsResponse:
+    shared_file_ids = select(Share.file_id).where(
+        or_(Share.shared_with_user_id == current_user.id, Share.owner_id == current_user.id),
+        Share.file_id.is_not(None),
+    )
+    shared_folder_ids = select(Share.folder_id).where(
+        or_(Share.shared_with_user_id == current_user.id, Share.owner_id == current_user.id),
+        Share.folder_id.is_not(None),
+    )
+    files_result = await session.execute(
+        select(File).where(File.id.in_(shared_file_ids), File.is_deleted.is_(False)).order_by(File.updated_at.desc())
+    )
+    folders_result = await session.execute(
+        select(Folder).where(Folder.id.in_(shared_folder_ids), Folder.is_deleted.is_(False)).order_by(Folder.updated_at.desc())
+    )
+    return SharedItemsResponse(files=list(files_result.scalars().all()), folders=list(folders_result.scalars().all()))
 
 
 @router.post("/public-link", response_model=PublicLinkCreateResponse, status_code=status.HTTP_201_CREATED)
@@ -115,6 +145,7 @@ async def create_public_link(
         expires_at=payload.expires_at,
     )
     session.add(link_share)
+    add_activity(session, user_id=current_user.id, action="create_public_link", file_id=payload.file_id, folder_id=payload.folder_id)
     await session.commit()
     await session.refresh(link_share)
 
@@ -144,12 +175,63 @@ async def access_public_link(
         if not payload.password or not verify_password(payload.password, link_share.password_hash):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid public link password")
 
+    file = await session.get(File, link_share.file_id) if link_share.file_id else None
+    folder = await session.get(Folder, link_share.folder_id) if link_share.folder_id else None
+    if (file and file.is_deleted) or (folder and folder.is_deleted):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Public link not found")
+
+    download = None
+    files: list[PublicLinkFileEntry] = []
+    folders = []
+    if file:
+        signed_download = await get_storage_service().create_signed_download_url(
+            file.storage_key,
+            settings.signed_download_expires_in_seconds,
+        )
+        download = FileDownloadResponse(
+            file_id=file.id,
+            download_url=signed_download.download_url,
+            expires_in_seconds=signed_download.expires_in_seconds,
+        )
+    if folder:
+        child_files = await session.execute(
+            select(File)
+            .where(File.folder_id == folder.id, File.is_deleted.is_(False))
+            .order_by(File.name.asc())
+        )
+        child_folders = await session.execute(
+            select(Folder)
+            .where(Folder.parent_id == folder.id, Folder.is_deleted.is_(False))
+            .order_by(Folder.name.asc())
+        )
+        for child_file in child_files.scalars().all():
+            child_download = await get_storage_service().create_signed_download_url(
+                child_file.storage_key,
+                settings.signed_download_expires_in_seconds,
+            )
+            files.append(
+                PublicLinkFileEntry(
+                    file=child_file,
+                    download=FileDownloadResponse(
+                        file_id=child_file.id,
+                        download_url=child_download.download_url,
+                        expires_in_seconds=child_download.expires_in_seconds,
+                    ),
+                )
+            )
+        folders = list(child_folders.scalars().all())
+
     return PublicLinkAccessResponse(
         id=link_share.id,
         role=ShareRole(link_share.role),
         file_id=link_share.file_id,
         folder_id=link_share.folder_id,
         expires_at=link_share.expires_at,
+        file=file,
+        folder=folder,
+        files=files,
+        folders=folders,
+        download=download,
     )
 
 

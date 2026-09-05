@@ -1,5 +1,6 @@
 from collections.abc import AsyncGenerator
 
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
@@ -22,3 +23,4 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
 async def create_database_tables() -> None:
     async with engine.begin() as connection:
         await connection.run_sync(Base.metadata.create_all)
+        await connection.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_image_url TEXT"))

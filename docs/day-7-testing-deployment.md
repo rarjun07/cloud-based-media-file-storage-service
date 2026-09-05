@@ -4,7 +4,7 @@
 
 - Added pytest project configuration
 - Added deployment verification tests
-- Added Render Blueprint configuration
+- Added Render Blueprint configuration with Alembic migration startup
 - Added production preflight script
 - Added Postman collection
 - Added Postman local environment
@@ -56,7 +56,7 @@ The Render service is configured as:
 ```text
 Root Directory: backend
 Build Command: pip install -r requirements.txt
-Start Command: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+Start Command: python -m alembic upgrade head && python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT
 Health Check Path: /api/v1/health
 ```
 
@@ -68,6 +68,12 @@ These must be set in the Render dashboard:
 DATABASE_URL
 SUPABASE_URL
 SUPABASE_SERVICE_ROLE_KEY
+FRONTEND_URL
+BACKEND_URL
+CORS_ORIGINS
+GOOGLE_CLIENT_ID
+GOOGLE_CLIENT_SECRET
+GOOGLE_REDIRECT_URI
 ```
 
 Render is configured to generate:

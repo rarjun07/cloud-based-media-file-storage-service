@@ -46,6 +46,50 @@ export type PublicLinkResponse = {
   expires_at: string | null;
 };
 
+export type PublicLinkAccessResponse = {
+  id: string;
+  role: ShareRole;
+  file_id: string | null;
+  folder_id: string | null;
+  expires_at: string | null;
+  file: {
+    id: string;
+    name: string;
+    mime_type: string;
+    size_bytes: number;
+    updated_at: string;
+  } | null;
+  folder: {
+    id: string;
+    name: string;
+    updated_at: string;
+  } | null;
+  files: {
+    file: {
+      id: string;
+      name: string;
+      mime_type: string;
+      size_bytes: number;
+      updated_at: string;
+    };
+    download: {
+      file_id: string;
+      download_url: string;
+      expires_in_seconds: number;
+    };
+  }[];
+  folders: {
+    id: string;
+    name: string;
+    updated_at: string;
+  }[];
+  download: {
+    file_id: string;
+    download_url: string;
+    expires_in_seconds: number;
+  } | null;
+};
+
 export function targetToPayload(target: ShareTarget) {
   return target.type === "file" ? { file_id: target.id } : { folder_id: target.id };
 }
@@ -80,7 +124,15 @@ export async function createPublicLink(
   return response.data;
 }
 
+export async function accessPublicLink(token: string, password?: string): Promise<PublicLinkAccessResponse> {
+  const response = await api.post<PublicLinkAccessResponse>(`/public-link/${token}`, {
+    password: password || undefined,
+  });
+  return response.data;
+}
+
 export function buildPublicLinkUrl(publicPath: string) {
-  const baseUrl = api.defaults.baseURL ?? window.location.origin;
-  return new URL(publicPath, baseUrl).toString();
+  const parts = publicPath.split("/").filter(Boolean);
+  const token = parts[parts.length - 1] ?? publicPath;
+  return new URL(`/public-link/${token}`, window.location.origin).toString();
 }

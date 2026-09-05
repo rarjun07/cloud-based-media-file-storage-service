@@ -4,6 +4,8 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 
 from app.models import ShareRole
+from app.schemas.file import FileDownloadResponse, FileRead
+from app.schemas.folder import FolderRead
 
 
 class ShareCreate(BaseModel):
@@ -46,8 +48,8 @@ class PublicLinkCreate(BaseModel):
     def validate_link(self) -> "PublicLinkCreate":
         if bool(self.file_id) == bool(self.folder_id):
             raise ValueError("Public link must target exactly one file or folder")
-        if self.role == ShareRole.OWNER:
-            raise ValueError("Owner role cannot be granted through public links")
+        if self.role != ShareRole.VIEWER:
+            raise ValueError("Public links can only grant viewer access")
         if self.expires_at and self._as_utc(self.expires_at) <= datetime.now(UTC):
             raise ValueError("Expiry must be in the future")
         return self
@@ -73,9 +75,24 @@ class PublicLinkAccessRequest(BaseModel):
     password: str | None = Field(default=None, max_length=72)
 
 
+class PublicLinkFileEntry(BaseModel):
+    file: FileRead
+    download: FileDownloadResponse
+
+
 class PublicLinkAccessResponse(BaseModel):
     id: UUID
     role: ShareRole
     file_id: UUID | None
     folder_id: UUID | None
     expires_at: datetime | None
+    file: FileRead | None = None
+    folder: FolderRead | None = None
+    files: list[PublicLinkFileEntry] = Field(default_factory=list)
+    folders: list[FolderRead] = Field(default_factory=list)
+    download: FileDownloadResponse | None = None
+
+
+class SharedItemsResponse(BaseModel):
+    files: list[FileRead]
+    folders: list[FolderRead]

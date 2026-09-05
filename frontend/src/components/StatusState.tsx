@@ -13,7 +13,7 @@ export function LoadingState({ label }: { label: string }) {
   return (
     <StatusFrame>
       <div
-        className="flex items-center gap-3 rounded-lg border border-line bg-white px-5 py-4 shadow-sm"
+        className="flex items-center gap-3 rounded-2xl border border-white/75 bg-white/78 px-5 py-4 shadow-md shadow-[#092c28]/10"
         aria-live="polite"
       >
         <Loader2 className="animate-spin text-brand" size={20} aria-hidden="true" />
@@ -37,10 +37,10 @@ export function ErrorState({ message }: { message: string }) {
 
 export function EmptyState({ icon, title }: { icon: ReactNode; title: string }) {
   return (
-    <div className="mt-5 flex min-h-[360px] items-center justify-center rounded-lg border border-dashed border-line bg-white px-4">
+    <div className="mt-5 flex min-h-[360px] items-center justify-center rounded-[28px] border border-dashed border-[#a8c4bb] bg-white/62 px-4 shadow-inner">
       <div className="text-center">
-        <span className="mx-auto flex justify-center text-slate-300">{icon}</span>
-        <h2 className="mt-3 text-lg font-semibold text-slate-700">{title}</h2>
+        <span className="mx-auto flex justify-center text-[#9bb7ad]">{icon}</span>
+        <h2 className="mt-3 text-xl font-black text-ink">{title}</h2>
       </div>
     </div>
   );

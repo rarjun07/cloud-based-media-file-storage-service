@@ -4,14 +4,14 @@ export default {
   theme: {
     extend: {
       colors: {
-        ink: "#111827",
-        panel: "#f8fafc",
-        line: "#d8dee8",
-        brand: "#2563eb",
-        mint: "#0f9f6e",
+        ink: "#122622",
+        panel: "#eef7f3",
+        line: "#c8dcd5",
+        brand: "#1c6a61",
+        mint: "#8ac7b0",
       },
       boxShadow: {
-        soft: "0 18px 60px rgba(15, 23, 42, 0.12)",
+        soft: "0 24px 70px rgba(9, 44, 40, 0.14)",
       },
     },
   },

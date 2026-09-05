@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  color: #111827;
-  background: #eef2f7;
+  color: #122622;
+  background: #d8ebe2;
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }

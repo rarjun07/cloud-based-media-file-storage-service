@@ -244,14 +244,44 @@ http://127.0.0.1:5173
 
 ## Deployment
 
-Backend deployment target: Render, Fly.io, or Railway.
+Backend deployment target: Render.
 
 Frontend deployment target: Vercel.
+
+Database and object storage target: Supabase.
+
+Streamlit is not a suitable deployment target for this codebase unless the React frontend is rewritten as a Streamlit app.
+
+Detailed deployment checklist:
+
+```text
+docs/deployment-checklist.md
+```
 
 Set this environment variable in Vercel before deploying:
 
 ```text
-VITE_API_BASE_URL=https://your-backend-api.example.com/api/v1
+VITE_API_BASE_URL=https://your-render-service.onrender.com/api/v1
 ```
 
 The repository includes `vercel.json`, so Vercel can build the frontend from the monorepo root and serve `frontend/dist`.
+
+The repository includes `render.yaml`, so Render can deploy the backend from the `backend` directory. The Render start command runs Alembic migrations before starting FastAPI:
+
+```text
+python -m alembic upgrade head && python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT
+```
+
+Required Render environment variables:
+
+```text
+DATABASE_URL
+SUPABASE_URL
+SUPABASE_SERVICE_ROLE_KEY
+FRONTEND_URL
+BACKEND_URL
+CORS_ORIGINS
+GOOGLE_CLIENT_ID
+GOOGLE_CLIENT_SECRET
+GOOGLE_REDIRECT_URI
+```

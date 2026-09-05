@@ -7,10 +7,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db_session
 from app.deps import get_current_user
-from app.models import File, Folder, LinkShare, Share, User
+from app.models import Activity, File, FileVersion, Folder, LinkShare, Share, Star, User
 from app.schemas.file import FileRead
 from app.schemas.folder import FolderRead
 from app.schemas.trash import TrashResponse
+from app.services.activity import add_activity
 
 router = APIRouter(prefix="/trash", tags=["trash"])
 
@@ -55,6 +56,7 @@ async def restore_file(
     file.is_deleted = False
     file.deleted_at = None
     file.updated_at = datetime.now(UTC)
+    add_activity(session, user_id=current_user.id, action="restore_file", file_id=file.id, folder_id=file.folder_id)
     await session.commit()
     await session.refresh(file)
     return file
@@ -78,6 +80,7 @@ async def restore_folder(
     folder.is_deleted = False
     folder.deleted_at = None
     folder.updated_at = datetime.now(UTC)
+    add_activity(session, user_id=current_user.id, action="restore_folder", folder_id=folder.id)
     await session.commit()
     await session.refresh(folder)
     return folder
@@ -95,6 +98,9 @@ async def permanently_delete_file(
 
     await session.execute(delete(Share).where(Share.file_id == file.id))
     await session.execute(delete(LinkShare).where(LinkShare.file_id == file.id))
+    await session.execute(delete(Star).where(Star.file_id == file.id))
+    await session.execute(delete(FileVersion).where(FileVersion.file_id == file.id))
+    await session.execute(delete(Activity).where(Activity.file_id == file.id))
     await session.delete(file)
     await session.commit()
 
@@ -127,5 +133,7 @@ async def permanently_delete_folder(
 
     await session.execute(delete(Share).where(Share.folder_id == folder.id))
     await session.execute(delete(LinkShare).where(LinkShare.folder_id == folder.id))
+    await session.execute(delete(Star).where(Star.folder_id == folder.id))
+    await session.execute(delete(Activity).where(Activity.folder_id == folder.id))
     await session.delete(folder)
     await session.commit()

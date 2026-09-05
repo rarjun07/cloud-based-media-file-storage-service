@@ -9,6 +9,7 @@ from app.core.database import get_db_session
 from app.deps import get_current_user
 from app.models import Folder, ShareRole, User
 from app.schemas.folder import FolderCreate, FolderDetail, FolderRead, FolderUpdate
+from app.services.activity import add_activity
 from app.services.folders import build_breadcrumbs, ensure_folder_is_not_descendant
 from app.services.permissions import require_folder_permission
 
@@ -29,6 +30,8 @@ async def create_folder(
 
     folder = Folder(owner_id=current_user.id, parent_id=payload.parent_id, name=payload.name)
     session.add(folder)
+    await session.flush()
+    add_activity(session, user_id=current_user.id, action="create_folder", folder_id=folder.id)
     await session.commit()
     await session.refresh(folder)
     return folder
@@ -37,9 +40,18 @@ async def create_folder(
 @router.get("", response_model=list[FolderRead])
 async def list_folders(
     parent_id: uuid.UUID | None = None,
+    recursive: bool = False,
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ) -> list[Folder]:
+    if recursive:
+        result = await session.execute(
+            select(Folder)
+            .where(Folder.owner_id == current_user.id, Folder.is_deleted.is_(False))
+            .order_by(Folder.name.asc())
+        )
+        return list(result.scalars().all())
+
     if parent_id:
         parent = await session.get(Folder, parent_id)
         if not parent or parent.is_deleted:
@@ -105,6 +117,7 @@ async def update_folder(
     if payload.name is not None:
         folder.name = payload.name
     folder.updated_at = datetime.now(UTC)
+    add_activity(session, user_id=current_user.id, action="update_folder", folder_id=folder.id)
 
     await session.commit()
     await session.refresh(folder)
@@ -125,4 +138,5 @@ async def delete_folder(
     folder.is_deleted = True
     folder.deleted_at = datetime.now(UTC)
     folder.updated_at = folder.deleted_at
+    add_activity(session, user_id=current_user.id, action="delete_folder", folder_id=folder.id)
     await session.commit()

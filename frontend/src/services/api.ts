@@ -123,3 +123,7 @@ export function getApiErrorMessage(error: unknown): string {
 
   return "Something went wrong";
 }
+
+export function isApiConnectionError(error: unknown): boolean {
+  return axios.isAxiosError(error) && !error.response;
+}

@@ -35,7 +35,7 @@ import {
   X,
 } from "lucide-react";
 
-import { getApiErrorMessage } from "../services/api";
+import { getApiErrorMessage, isApiConnectionError } from "../services/api";
 import { useCurrentUser, useLogout, useUpdateProfile } from "../hooks/useAuth";
 import {
   useActivities,
@@ -647,7 +647,7 @@ export function DashboardPage() {
               onPermanentDelete={handlePermanentDelete}
             />
           ) : null}
-          {actionError ? <ErrorState message={actionError} /> : null}
+          {actionError && !isApiConnectionMessage(actionError) ? <ErrorState message={actionError} /> : null}
         </section>
       </div>
       {shareTarget ? <ShareModal target={shareTarget} onClose={() => setShareTarget(null)} /> : null}
@@ -1114,7 +1114,7 @@ function DriveContent({
     return <LoadingState label={isSearchMode ? "Searching" : "Loading drive"} />;
   }
 
-  if (error) {
+  if (error && !(isApiConnectionError(error) && totalCount === 0)) {
     return <ErrorState message={getApiErrorMessage(error)} />;
   }
 
@@ -1172,6 +1172,10 @@ function DriveContent({
       ) : null}
     </>
   );
+}
+
+function isApiConnectionMessage(message: string) {
+  return message === "CloudDrive cannot reach the API right now. Refresh the page and try again.";
 }
 
 function SuggestedShelves({
